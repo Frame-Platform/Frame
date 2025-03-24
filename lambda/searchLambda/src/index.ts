@@ -50,13 +50,13 @@ export const handler = async (
     if (e instanceof Error) {
       return {
         statusCode: 400,
-        body: e.message,
+        body: JSON.stringify({ error: e.message }),
       };
     }
 
     return {
       statusCode: 500,
-      body: "Unknown Server Error",
+      body: JSON.stringify({ error: "Unknown Server Error" }),
     };
   }
 };
