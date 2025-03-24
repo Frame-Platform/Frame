@@ -205,7 +205,7 @@ app.get("/doc", (c) => {
       <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
       <script>
         SwaggerUIBundle({
-          url: '/openapi.json', // ensure your OpenAPI spec is available at this endpoint
+          url: '/openapi.json',
           dom_id: '#swagger-ui'
         });
       </script>
