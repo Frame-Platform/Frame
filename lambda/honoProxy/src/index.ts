@@ -1,4 +1,6 @@
 import { handle } from "hono/aws-lambda";
+import * as AWS from "aws-sdk";
+
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import {
   createDocumentSchema,
@@ -184,10 +186,37 @@ app.openapi(
           },
         },
       },
+      400: {
+        description: "Bad Request",
+        content: {
+          "application/json": {
+            schema: errorResponseSchema,
+          },
+        },
+      },
     },
   }),
-  (c) => {
-    return c.json({ results: [] });
+  async (c) => {
+    const payload = c.req.valid("json");
+    const params = {
+      FunctionName: "searchLambda",
+      InvocationType: "RequestResponse",
+      Payload: JSON.stringify(payload),
+    };
+
+    try {
+      const lambda = new AWS.Lambda();
+      const res = await lambda.invoke(params).promise();
+
+      let results;
+      if (res.Payload) {
+        results = JSON.parse((res.Payload as Buffer).toString("utf8"));
+      }
+
+      return c.json({ results: [] }, 200);
+    } catch (e) {
+      return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
+    }
   },
 );
 
