@@ -213,7 +213,7 @@ app.openapi(
         results = JSON.parse((res.Payload as Buffer).toString("utf8"));
       }
 
-      return c.json({ results: [] }, 200);
+      return c.json({ results }, 200);
     } catch (e) {
       return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
     }

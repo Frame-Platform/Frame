@@ -8,7 +8,7 @@ export const handler = async (
   event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
   try {
-    const validationResult = payloadSchema.parse(event.body);
+    const validationResult = payloadSchema.parse(event);
     const { url, desc, threshold, topK } = validationResult;
 
     // process image
@@ -32,7 +32,7 @@ export const handler = async (
 
     return {
       statusCode: 200,
-      body: JSON.stringify(rdsResults),
+      body: JSON.stringify(embedding),
     };
   } catch (e) {
     console.log(e);
