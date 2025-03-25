@@ -129,7 +129,7 @@ app.openapi(
       const { images } = c.req.valid("json");
       const validatedImages = await Promise.all(images.map(validateImage));
       const sqsResults = await Promise.allSettled(
-        validatedImages.map(sendToSQS)
+        validatedImages.map(sendToSQS),
       );
 
       const messageStatuses = sqsResults.map((result, i) => {
@@ -279,6 +279,10 @@ app.doc("/openapi.json", {
     version: "1.0.0",
     title: "My API",
   },
+});
+
+app.all("*", (c) => {
+  return c.text("404 Not Found", 404);
 });
 
 export const handler = handle(app);
