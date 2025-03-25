@@ -1,5 +1,6 @@
 import { handle } from "hono/aws-lambda";
 import * as AWS from "aws-sdk";
+import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import {
@@ -51,7 +52,7 @@ app.openapi(
       perPage,
       total: documents.length,
     });
-  },
+  }
 );
 
 app.openapi(
@@ -83,7 +84,7 @@ app.openapi(
       content: `Content for document ${id}`,
     };
     return c.json(document);
-  },
+  }
 );
 
 app.openapi(
@@ -124,40 +125,31 @@ app.openapi(
     try {
       const { images } = c.req.valid("json");
       const validatedImages = await Promise.all(images.map(validateImage));
+      const sqsClient = new SQSClient({ region: "us-east-1" });
 
-      // add to queue
+      const sqsPromises = validatedImages.map(async (image) => {
+        const messageBody = JSON.stringify({
+          imageUrl: image.url,
+          description: image.desc || null,
+          timestamp: new Date().toISOString(),
+        });
+
+        const command = new SendMessageCommand({
+          QueueUrl:
+            "https://sqs.us-east-1.amazonaws.com/982227461113/ingestionQueue",
+          MessageBody: messageBody,
+        });
+
+        return sqsClient.send(command);
+      });
+
+      await Promise.all(sqsPromises);
 
       return c.json(validatedImages, 200);
     } catch (e) {
       return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
     }
-  },
-);
-
-app.openapi(
-  createRoute({
-    method: "delete",
-    path: "/document/:id",
-    description: "Performs a delete request on provided id in the path.",
-    request: {
-      params: z.object({
-        id: z.string().openapi({ param: { name: "id", in: "path" } }),
-      }),
-    },
-    responses: {
-      200: {
-        description: "Successful delete request",
-        content: {
-          "application/json": {
-            schema: z.object({ success: z.boolean() }),
-          },
-        },
-      },
-    },
-  }),
-  (c) => {
-    return c.json({ success: true }, 200);
-  },
+  }
 );
 
 app.openapi(
@@ -217,7 +209,7 @@ app.openapi(
     } catch (e) {
       return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
     }
-  },
+  }
 );
 
 app.get("/doc", (c) => {
