@@ -1,17 +1,21 @@
 import { handle } from "hono/aws-lambda";
 import * as AWS from "aws-sdk";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { imgToBase64 } from "./utils";
+import { cors } from "hono/cors";
 import {
   createDocumentSchema,
   validateImageResultSchema,
   errorResponseSchema,
   validateImage,
-  documentSearchSchema,
+  searchJSONSchema,
+  searchMultipartSchema,
   paginationSchema,
 } from "./types";
 import { sendToSQS } from "./utils";
 
 const app = new OpenAPIHono();
+app.use(cors({ origin: "*" }));
 
 app.openapi(
   createRoute({
@@ -51,7 +55,7 @@ app.openapi(
       perPage,
       total: documents.length,
     });
-  }
+  },
 );
 
 app.openapi(
@@ -83,7 +87,7 @@ app.openapi(
       content: `Content for document ${id}`,
     };
     return c.json(document);
-  }
+  },
 );
 
 app.openapi(
@@ -143,8 +147,17 @@ app.openapi(
     } catch (e) {
       return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
     }
-  }
+  },
 );
+
+// Middleware for parsing multipart form data before zod validation.
+app.use("/search", async (c, next) => {
+  if (c.req.header("Content-Type")?.startsWith("multipart/form-data")) {
+    const parsedData = await c.req.parseBody();
+    c.req.addValidatedData("form", parsedData);
+  }
+  await next();
+});
 
 app.openapi(
   createRoute({
@@ -154,7 +167,10 @@ app.openapi(
       body: {
         content: {
           "application/json": {
-            schema: documentSearchSchema,
+            schema: searchJSONSchema,
+          },
+          "multipart/form-data": {
+            schema: searchMultipartSchema,
           },
         },
         description:
@@ -180,30 +196,58 @@ app.openapi(
           },
         },
       },
+      500: {
+        description: "Server Error",
+        content: {
+          "application/json": {
+            schema: errorResponseSchema,
+          },
+        },
+      },
     },
   }),
   async (c) => {
-    const payload = c.req.valid("json");
-    const params = {
-      FunctionName: "searchLambda",
-      InvocationType: "RequestResponse",
-      Payload: JSON.stringify(payload),
-    };
-
     try {
-      const lambda = new AWS.Lambda();
-      const res = await lambda.invoke(params).promise();
+      const contentType = c.req.header("Content-Type") || "";
+      let message;
+      if (contentType.startsWith("application/json")) {
+        message = c.req.valid("json");
+      } else if (contentType.startsWith("multipart/form-data")) {
+        const formData = c.req.valid("form");
+        const { desc, threshold, topK, image } = formData as z.infer<
+          typeof searchMultipartSchema
+        >;
 
-      let results;
-      if (res.Payload) {
-        results = JSON.parse((res.Payload as Buffer).toString("utf8"));
+        const base64EncodedImage = image ? await imgToBase64(image) : undefined;
+        const imageEncoding = base64EncodedImage ? { base64EncodedImage } : {};
+
+        message = { desc, threshold, topK, ...imageEncoding };
       }
 
-      return c.json({ results }, 200);
-    } catch (e) {
-      return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
+      const lambda = new AWS.Lambda();
+      const params = {
+        FunctionName: "searchLambda",
+        InvocationType: "RequestResponse",
+        Payload: JSON.stringify(message),
+      };
+      const res = await lambda.invoke(params).promise();
+      if (res.FunctionError) {
+        console.error("Lambda function error:", res);
+        throw new Error("Lambda invocation failed");
+      }
+
+      return c.json(
+        { results: JSON.parse((res.Payload as Buffer).toString("utf8")) },
+        200,
+      );
+    } catch (error) {
+      if (error instanceof Error) {
+        return c.json({ error: error.message }, 500);
+      } else {
+        return c.json({ error: "Internal Server Error" }, 500);
+      }
     }
-  }
+  },
 );
 
 app.get("/doc", (c) => {
