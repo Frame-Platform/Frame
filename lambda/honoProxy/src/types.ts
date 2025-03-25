@@ -8,7 +8,7 @@ const documentEntrySchema = z.object({
   desc: z.string().optional(),
 });
 
-export const documentSearchSchema = z
+export const searchJSONSchema = z
   .object({
     url: z.string().url({ message: "Invalid URL format" }).optional(),
     desc: z.string().optional(),
@@ -21,6 +21,27 @@ export const documentSearchSchema = z
   })
   .refine((data) => data.url || data.desc, {
     message: "At least one of url or desc must be provided.",
+  });
+
+export const searchMultipartSchema = z
+  .object({
+    image: z
+      .instanceof(File, { message: "Image must be a valid file" })
+      .refine(
+        (file) => file.type === "image/png" || file.type === "image/jpeg",
+        { message: "Only PNG or JPEG images are allowed" },
+      )
+      .optional(),
+    desc: z.string().optional(),
+    threshold: z
+      .number()
+      .min(0, "Threshold must be at least 0")
+      .max(1, "Threshold must be at most 1")
+      .default(0),
+    topK: z.number().default(10),
+  })
+  .refine((data) => data.image || data.desc, {
+    message: "At least one of image or desc must be provided.",
   });
 
 export const createDocumentSchema = z.object({

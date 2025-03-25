@@ -9,12 +9,17 @@ export const handler = async (
 ): Promise<APIGatewayProxyResult> => {
   try {
     const validationResult = payloadSchema.parse(event);
-    const { url, desc, threshold, topK } = validationResult;
+    const { base64EncodedImage, url, desc, threshold, topK } = validationResult;
 
-    // process image
-    let imagePayload = {};
+    let imageBuffer;
     if (url) {
-      const imageBuffer = await downloadImage(url);
+      imageBuffer = await downloadImage(url);
+    } else if (base64EncodedImage) {
+      imageBuffer = Buffer.from(base64EncodedImage, "base64");
+    }
+
+    let imagePayload = {};
+    if (imageBuffer) {
       const resizedBuffer = await resizeImageToLimit(imageBuffer);
       imagePayload = { inputImage: resizedBuffer.toString("base64") };
     }
