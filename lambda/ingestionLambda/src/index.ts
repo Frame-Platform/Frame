@@ -2,26 +2,26 @@ import {
   BedrockRuntimeClient,
   InvokeModelCommand,
 } from "@aws-sdk/client-bedrock-runtime";
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import { SQSEvent } from "aws-lambda";
 import sharp from "sharp";
 
-export const handler = async (
-  event: APIGatewayProxyEvent
-): Promise<APIGatewayProxyResult> => {
+export const handler = async (event: SQSEvent) => {
+  console.log("Received SQS event:", JSON.stringify(event, null, 2));
   // Event body is an "images" object that points to an array containing documents.
   // Each document has a url property and optional desc property.
-  let body;
-  if (event.body) {
-    body = JSON.parse(event.body);
-  }
-  const document = body.images[0];
-  const url = document.url;
-  const desc = document.desc;
 
+  const record = event.Records[0];
+  const { body } = record;
+  const messageBody = JSON.parse(body);
+  const { imageUrl, description, timestamp } = messageBody;
+
+  console.log("Image URL:", imageUrl);
+  console.log("Description:", description);
+  console.log("Timestamp:", timestamp);
   // Check to see if document UUID exists in DB, if true, return early to maintain idempotency
 
   try {
-    const image = await fetch(url);
+    const image = await fetch(imageUrl);
     // Resize the image
     const imageBuffer = Buffer.from(await image.arrayBuffer());
     const resizedImage = await resizeImageToLimit(imageBuffer);
@@ -35,7 +35,7 @@ export const handler = async (
       contentType: "application/json",
       accept: "application/json",
       body: JSON.stringify({
-        inputText: desc,
+        inputText: description,
         inputImage: imageBase64,
       }),
     });
@@ -46,7 +46,7 @@ export const handler = async (
     );
 
     const embedding = responseBody.embedding;
-
+    console.log("Embedding:", embedding);
     // TODO: Insert image embedding into RDS
 
     // Send response back
@@ -54,8 +54,8 @@ export const handler = async (
       statusCode: 200,
       body: JSON.stringify({
         message: "Document was successfully ingested",
-        url,
-        desc,
+        imageUrl,
+        description,
         embedding,
       }),
     };
