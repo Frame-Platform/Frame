@@ -18,6 +18,8 @@ export const handler = async (
   const url = document.url;
   const desc = document.desc;
 
+  // Check to see if document UUID exists in DB, if true, return early to maintain idempotency
+
   try {
     const image = await fetch(url);
     // Resize the image
