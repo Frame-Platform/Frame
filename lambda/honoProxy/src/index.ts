@@ -143,9 +143,19 @@ app.openapi(
         return sqsClient.send(command);
       });
 
-      await Promise.all(sqsPromises);
+      const results = await Promise.allSettled(sqsPromises);
+      const statuses = results.map((result, i) => {
+        const currImg = validatedImages[i];
 
-      return c.json(validatedImages, 200);
+        return {
+          url: currImg.url,
+          desc: currImg.desc,
+          success: result.status === "fulfilled" ? true : false,
+          errors: "reason" in result ? result.reason : "",
+        };
+      });
+
+      return c.json(statuses, 200);
     } catch (e) {
       return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
     }
