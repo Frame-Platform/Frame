@@ -1,7 +1,5 @@
 import { handle } from "hono/aws-lambda";
 import * as AWS from "aws-sdk";
-import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
-
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { imgToBase64 } from "./utils";
 import { cors } from "hono/cors";
@@ -14,6 +12,7 @@ import {
   searchMultipartSchema,
   paginationSchema,
 } from "./types";
+import { sendToSQS } from "./utils";
 
 const app = new OpenAPIHono();
 app.use(cors({ origin: "*" }));
@@ -129,26 +128,11 @@ app.openapi(
     try {
       const { images } = c.req.valid("json");
       const validatedImages = await Promise.all(images.map(validateImage));
-      const sqsClient = new SQSClient({ region: "us-east-1" });
+      const sqsResults = await Promise.allSettled(
+        validatedImages.map(sendToSQS)
+      );
 
-      const sqsPromises = validatedImages.map(async (image) => {
-        const messageBody = JSON.stringify({
-          imageUrl: image.url,
-          description: image.desc || null,
-          timestamp: new Date().toISOString(),
-        });
-
-        const command = new SendMessageCommand({
-          QueueUrl:
-            "https://sqs.us-east-1.amazonaws.com/982227461113/ingestionQueue",
-          MessageBody: messageBody,
-        });
-
-        return sqsClient.send(command);
-      });
-
-      const results = await Promise.allSettled(sqsPromises);
-      const statuses = results.map((result, i) => {
+      const messageStatuses = sqsResults.map((result, i) => {
         const currImg = validatedImages[i];
 
         return {
@@ -159,7 +143,7 @@ app.openapi(
         };
       });
 
-      return c.json(statuses, 200);
+      return c.json(messageStatuses, 200);
     } catch (e) {
       return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
     }
