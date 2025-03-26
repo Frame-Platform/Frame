@@ -8,18 +8,13 @@ export const handler = async (
   event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
   try {
+    console.log(event);
     const validationResult = payloadSchema.parse(event);
-    const { base64EncodedImage, url, desc, threshold, topK } = validationResult;
-
-    let imageBuffer;
-    if (url) {
-      imageBuffer = await downloadImage(url);
-    } else if (base64EncodedImage) {
-      imageBuffer = Buffer.from(base64EncodedImage, "base64");
-    }
+    const { url, desc, threshold, topK } = validationResult;
 
     let imagePayload = {};
-    if (imageBuffer) {
+    if (url) {
+      const imageBuffer = await downloadImage(url);
       const resizedBuffer = await resizeImageToLimit(imageBuffer);
       imagePayload = { inputImage: resizedBuffer.toString("base64") };
     }

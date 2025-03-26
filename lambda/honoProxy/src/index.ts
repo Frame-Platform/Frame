@@ -1,7 +1,12 @@
 import { handle } from "hono/aws-lambda";
-import * as AWS from "aws-sdk";
+import type { LambdaEvent, LambdaContext } from "hono/aws-lambda";
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
+import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
-import { imgToBase64 } from "./utils";
 import { cors } from "hono/cors";
 import {
   createDocumentSchema,
@@ -13,8 +18,10 @@ import {
   paginationSchema,
 } from "./types";
 import { sendToSQS } from "./utils";
+import { ZodError } from "zod";
 
 const app = new OpenAPIHono();
+
 app.use(cors({ origin: "*" }));
 
 app.openapi(
@@ -149,14 +156,74 @@ app.openapi(
     }
   },
 );
+function sanitizeFilename(filename: string): string {
+  return filename
+    .replace(/[^a-zA-Z0-9-_\.~]/g, "-") // Replace unsafe characters with hyphen
+    .toLowerCase(); // Convert to lowercase for consistency
+}
 
 // Middleware for parsing multipart form data before zod validation.
 app.use("/search", async (c, next) => {
-  if (c.req.header("Content-Type")?.startsWith("multipart/form-data")) {
-    const parsedData = await c.req.parseBody();
-    c.req.addValidatedData("form", parsedData);
+  if (!c.req.header("Content-Type")?.startsWith("multipart/form-data")) {
+    return await next();
   }
-  await next();
+
+  const region = "us-east-1";
+  const bucketName = "temp-search-bucket";
+  const s3Client = new S3Client({ region });
+
+  let imageKey: string | null = null;
+
+  try {
+    const validatedData = searchMultipartSchema.parse(await c.req.parseBody());
+    // need to validate if 'desc or image' present
+    let imageUrl;
+    if ("image" in validatedData && "name" in validatedData.image) {
+      const { image } = validatedData;
+      imageKey = image.name;
+
+      const uploadCommand = new PutObjectCommand({
+        Bucket: bucketName,
+        Key: imageKey as string,
+        Body: Buffer.from(await image.arrayBuffer()),
+        ContentType: image.type,
+      });
+      imageUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${imageKey}`;
+      await s3Client.send(uploadCommand);
+      console.log(`Uploaded S3 image: ${imageKey}`);
+    }
+
+    const requestData = {
+      ...(imageUrl ? { url: imageUrl } : {}),
+      ...(validatedData.desc ? { desc: validatedData.desc } : {}),
+      threshold: validatedData.threshold ?? 0,
+      topK: validatedData.topK ?? 10,
+    };
+    console.log(requestData);
+    c.req.addValidatedData("formData" as any, requestData);
+    await next();
+  } catch (e) {
+    console.log(`Error in multipart form middleware: ${e}`);
+    // if (e instanceof ZodError) {
+    //   const errorMessages = e.errors.map((err) => err.message).join(", ");
+    //   return {
+    //     statusCode: 400,
+    //     body: JSON.stringify({
+    //       error: "Validation error",
+    //       details: errorMessages,
+    //     }),
+    //   };
+    // }
+  } finally {
+    if (imageKey) {
+      console.log(`Deleting S3 image: ${imageKey}`);
+      const deleteCommand = new DeleteObjectCommand({
+        Bucket: bucketName,
+        Key: imageKey,
+      });
+      await s3Client.send(deleteCommand);
+    }
+  }
 });
 
 app.openapi(
@@ -170,7 +237,7 @@ app.openapi(
             schema: searchJSONSchema,
           },
           "multipart/form-data": {
-            schema: searchMultipartSchema,
+            schema: z.any(),
           },
         },
         description:
@@ -207,39 +274,32 @@ app.openapi(
     },
   }),
   async (c) => {
+    const contentType = c.req.header("Content-Type") || "";
+    // to be env
+    const region = "us-east-1";
+
     try {
-      const contentType = c.req.header("Content-Type") || "";
       let message;
       if (contentType.startsWith("application/json")) {
         message = c.req.valid("json");
       } else if (contentType.startsWith("multipart/form-data")) {
-        const formData = c.req.valid("form");
-        const { desc, threshold, topK, image } = formData as z.infer<
-          typeof searchMultipartSchema
-        >;
-
-        const base64EncodedImage = image ? await imgToBase64(image) : undefined;
-        const imageEncoding = base64EncodedImage ? { base64EncodedImage } : {};
-
-        message = { desc, threshold, topK, ...imageEncoding };
+        message = c.req.valid("formData" as "form");
+        console.log(message);
+      } else {
+        throw new Error("No provided message.");
       }
 
-      const lambda = new AWS.Lambda();
-      const params = {
+      const lambdaClient = new LambdaClient({ region });
+      const command = new InvokeCommand({
         FunctionName: "searchLambda",
         InvocationType: "RequestResponse",
-        Payload: JSON.stringify(message),
-      };
-      const res = await lambda.invoke(params).promise();
-      if (res.FunctionError) {
-        console.error("Lambda function error:", res);
-        throw new Error("Lambda invocation failed");
-      }
-
-      return c.json(
-        { results: JSON.parse((res.Payload as Buffer).toString("utf8")) },
-        200,
+        Payload: Buffer.from(JSON.stringify(message)),
+      });
+      const res = await lambdaClient.send(command);
+      const payloadString = Buffer.from(res.Payload as Uint8Array).toString(
+        "utf8",
       );
+      return c.json({ results: JSON.parse(payloadString) }, 200);
     } catch (error) {
       if (error instanceof Error) {
         return c.json({ error: error.message }, 500);

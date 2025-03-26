@@ -25,13 +25,7 @@ export const searchJSONSchema = z
 
 export const searchMultipartSchema = z
   .object({
-    image: z
-      .instanceof(File, { message: "Image must be a valid file" })
-      .refine(
-        (file) => file.type === "image/png" || file.type === "image/jpeg",
-        { message: "Only PNG or JPEG images are allowed" },
-      )
-      .optional(),
+    image: z.any().optional(),
     desc: z.string().optional(),
     threshold: z
       .number()
