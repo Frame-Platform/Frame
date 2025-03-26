@@ -3,12 +3,14 @@
     "build:lambda": "bash ./build-lambda.sh"
   },
   "devDependencies": {
+    "@aws-sdk/client-lambda": "^3.775.0",
+    "@aws-sdk/client-s3": "^3.775.0",
     "@aws-sdk/client-sqs": "^3.774.0",
     "@hono/zod-openapi": "^0.19.2",
     "@types/aws-lambda": "^8.10.147",
     "@types/node": "^22.13.9",
-    "aws-sdk": "^2.1692.0",
     "hono": "^4.7.5",
+    "lambda-multipart-parser": "^1.0.1",
     "typescript": "^5.7.3",
     "zod": "^3.24.2"
   }
