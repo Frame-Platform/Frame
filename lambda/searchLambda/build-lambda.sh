@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
-
+PACKAGE_NAME="searchLambda"
 # Clean previous builds
-rm -rf dist package lambda.zip
+rm -rf dist package ${PACKAGE_NAME}.zip
 
 # Build the project using the TypeScript compiler (tsc)
 npx tsc
@@ -24,10 +24,10 @@ popd > /dev/null
 
 # Create a zip file containing everything from the package directory at the zip root
 cd package
-zip -r ../lambda.zip .
+zip -r ../${PACKAGE_NAME}.zip .
 cd ..
 
 # Clean up the temporary package directory
 rm -rf package
 
-echo "Lambda deployment package created: lambda.zip"
+echo "Lambda deployment package created: ${PACKAGE_NAME}.zip"
