@@ -1,0 +1,12 @@
+{
+  "name": "new",
+  "version": "1.0.0",
+  "description": "A new repo",
+  "main": "index.js",
+  "scripts": {
+    "build:lambdas": "bash ./build-all.sh",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
