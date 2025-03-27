@@ -25,7 +25,35 @@ export const searchJSONSchema = z
 
 export const searchMultipartSchema = z
   .object({
-    image: z.any().optional(),
+    image: z.preprocess(
+      (file) => {
+        if (file instanceof File && file.size === 0 && file.name === "") {
+          return undefined;
+        }
+        return file;
+      },
+      z
+        .any()
+        .optional()
+        .refine(
+          (file) => {
+            if (!file) return true;
+            return VALID_TYPES.includes(file.type);
+          },
+          {
+            message: "Invalid image type. Only JPEG and PNG are allowed",
+          },
+        )
+        .refine(
+          (file) => {
+            if (!file) return true;
+            return file.size > 0 && file.size <= MAX_SIZE;
+          },
+          {
+            message: `File size must be between 0 and ${MAX_SIZE / 1024 / 1024} MB`,
+          },
+        ),
+    ),
     desc: z.string().optional(),
     threshold: z
       .number()
@@ -126,3 +154,10 @@ export const paginationSchema = z.object({
     .optional()
     .transform((val) => (val ? parseInt(val, 10) : 10)),
 });
+
+export type SearchMessageType = {
+  threshold: number;
+  topK: number;
+  url?: string;
+  desc?: string;
+};
