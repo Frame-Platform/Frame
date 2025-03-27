@@ -9,7 +9,8 @@ import { payloadSchema } from "./types";
 
 export const handler = async (event: SQSEvent) => {
   try {
-    const validationResult = payloadSchema.parse(event);
+    const message = JSON.parse(event.Records[0].body);
+    const validationResult = payloadSchema.parse(message);
     const { url, desc } = validationResult;
 
     // Fetch the image and create a buffer
