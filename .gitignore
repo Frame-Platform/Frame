@@ -27,3 +27,6 @@ Thumbs.db
 # Editor / IDE directories
 .vscode/
 .idea/
+
+# Ignore lambda layer build folders
+**/nodejs/
