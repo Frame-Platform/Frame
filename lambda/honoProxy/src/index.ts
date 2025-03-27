@@ -3,6 +3,7 @@ import {
   invokeSearchLambda,
   uploadImageToS3,
   deleteImageFromS3,
+  pgGetDocuments,
 } from "./utils";
 
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
@@ -47,21 +48,31 @@ app.openapi(
           },
         },
       },
+      400: {
+        description: "Bad Request",
+        content: {
+          "application/json": {
+            schema: errorResponseSchema,
+          },
+        },
+      },
     },
   }),
-  (c) => {
-    const { page, perPage } = c.req.valid("query");
-    const documents = [
-      { id: "1", title: "Document 1", content: "Content for document 1" },
-      { id: "2", title: "Document 2", content: "Content for document 2" },
-    ];
-    return c.json({
-      documents,
-      page,
-      perPage,
-      total: documents.length,
-    });
-  },
+  async (c) => {
+    try {
+      const { page, perPage } = c.req.valid("query");
+      const documents = await pgGetDocuments(perPage, page);
+
+      return c.json({
+        documents,
+        page,
+        perPage,
+        total: documents.length,
+      }, 200);
+    } catch (e) {
+      return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
+    }
+  }
 );
 
 app.openapi(

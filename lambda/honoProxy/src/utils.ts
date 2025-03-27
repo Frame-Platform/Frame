@@ -1,5 +1,7 @@
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
+import { Client } from "pg";
+import dotenv from "dotenv";
 import {
   S3Client,
   PutObjectCommand,
@@ -9,6 +11,48 @@ const QUEUE_URL =
   "https://sqs.us-east-1.amazonaws.com/982227461113/ingestionQueue";
 const REGION = "us-east-1";
 const sqsClient = new SQSClient({ region: REGION });
+
+dotenv.config();
+
+const pgConnect = async () => {
+  try {
+    const pgClient = new Client({
+      host: process.env.HOST_NAME,
+      port: Number(process.env.PORT) || 5432,
+      database: process.env.DBNAME,
+      user: process.env.POSTGRES_USER,
+      password: process.env.POSTGRES_PASSWORD,
+      ssl: {
+        rejectUnauthorized: false,
+      },
+    });
+
+    await pgClient.connect();
+    return pgClient;
+  } catch (e) {
+    throw new Error(`Error connecting to Postgres`);
+  }
+};
+
+export const pgGetDocuments = async (
+  limit: string | number = 'ALL',
+  offset: string | number = 0,
+) => {
+  try {
+    const pgClient = await pgConnect();
+
+    const query = `
+            SELECT id, url, description FROM documents
+            ORDER BY id DESC LIMIT $1 OFFSET $2
+    `;
+    const { rows } = await pgClient.query(query, [limit, offset]);
+
+    await pgClient.end();
+    return rows;
+  } catch (e) {
+    throw new Error(`Error getting documents`);
+  }
+}
 
 export async function sendToSQS(image: {
   success: boolean;
