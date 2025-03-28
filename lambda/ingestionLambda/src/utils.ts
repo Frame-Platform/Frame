@@ -38,22 +38,24 @@ export const pgInsert = async (
 ): Promise<void> => {
   try {
     await pgClient.query("CREATE EXTENSION IF NOT EXISTS vector");
-    await pgClient.query(
-      `CREATE TABLE IF NOT EXISTS documents (
-      id SERIAL PRIMARY KEY,
-      embedding vector(1024) NOT NULL,
-      url TEXT,
-      description TEXT,
-      timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )`
-    );
+    await pgClient.query(`CREATE TABLE IF NOT EXISTS documents (
+                                id SERIAL PRIMARY KEY,
+                                embedding vector(1024) NOT NULL,
+                                url TEXT,
+                                description TEXT,
+                                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                CONSTRAINT unique_url_desc UNIQUE (url, description)
+                                )`);
     const query = `
               INSERT INTO documents (embedding, url, description)
               VALUES ($1, $2, $3)
+              ON CONFLICT (url, description) DO NOTHING
           `;
-
     // if url or desc is undefined, row will have a NULL value
     await pgClient.query(query, [JSON.stringify(embedding), url, desc]);
+    await pgClient.query(
+      `SELECT setval('documents_id_seq', (SELECT MAX(id) FROM documents));`
+    );
   } catch (e) {
     throw new Error(`Error inserting document into database: ${e}`);
   }
