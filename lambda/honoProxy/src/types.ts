@@ -3,10 +3,18 @@ import { z } from "@hono/zod-openapi";
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 const VALID_TYPES = ["image/jpeg", "image/png"];
 
-const documentEntrySchema = z.object({
-  url: z.string().url({ message: "Invalid URL format" }),
-  desc: z.string().optional(),
-});
+const documentEntrySchema = z
+  .object({
+    url: z
+      .string()
+      .url({ message: "Invalid URL format" })
+      .optional()
+      .nullable(),
+    desc: z.string().optional().nullable(),
+  })
+  .refine((data) => data.url || data.desc, {
+    message: "At least one of url or desc must be provided.",
+  });
 
 export const searchJSONSchema = z
   .object({
@@ -101,8 +109,8 @@ export const imageResponseSchema = z.object({
 
 export const validateImageResultSchema = z.object({
   success: z.boolean(),
-  url: z.string(),
-  desc: z.string().optional(),
+  url: z.string().optional().nullable(),
+  desc: z.string().optional().nullable(),
   errors: z.string().optional(),
 });
 
@@ -111,8 +119,15 @@ export const errorResponseSchema = z.object({
 });
 
 type DocumentEntryType = z.infer<typeof documentEntrySchema>;
-export const validateImage = async ({ url, desc }: DocumentEntryType) => {
+export type ValidImageResult = z.infer<typeof validateImageResultSchema>;
+
+export const validateImage = async ({
+  url,
+  desc,
+}: DocumentEntryType): Promise<ValidImageResult> => {
   try {
+    if (!url) return { success: true, url, desc, errors: "" };
+
     const res = await fetch(url, { method: "HEAD" });
     if (!res.ok) {
       return {
