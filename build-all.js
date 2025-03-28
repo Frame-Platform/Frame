@@ -24,8 +24,8 @@ try {
     const srcDir = path.join(WORKING_DIR, dir);
 
     console.log(`--Building ${dir}...`);
-    execSync(`npm --prefix ${srcDir} run build:lambda`);
-    execSync(`cp ${srcDir}/${dir}.zip ${distPath}`);
+    execSync(`npm --prefix ${srcDir} run build:lambda`, { stdio: "inherit" });
+    execSync(`cp ${srcDir}/${dir}.zip ${distPath}`, { stdio: "inherit" });
     console.log(`--${dir} complete!`);
   }
 
@@ -33,7 +33,9 @@ try {
   for (const dir of layerDirectories) {
     console.log(`--Building ${dir} layer...`);
     const scriptPath = path.join(LAYER_DIR, dir, "script.sh");
-    execSync(`bash ${LAYER_DIR}/${dir}/script.sh`);
+    execSync(`bash ${LAYER_DIR}/${dir}/script.sh`, {
+      stdio: "inherit",
+    });
     console.log(`--${dir} layer complete!`);
   }
 } catch (e) {
