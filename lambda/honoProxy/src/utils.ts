@@ -7,6 +7,7 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
+import { ValidImageResult } from "./types";
 const QUEUE_URL =
   "https://sqs.us-east-1.amazonaws.com/982227461113/ingestionQueue";
 dotenv.config();
@@ -53,7 +54,7 @@ export const pgGetDocuments = async (
 };
 
 export async function sendToSQS(
-  images: { success: boolean; errors?: string; url: string; desc?: string }[],
+  images: ValidImageResult[],
   sqsClient: SQSClient
 ) {
   // Filter out invalid images to avoid sending bad requests
