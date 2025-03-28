@@ -24,6 +24,7 @@ try {
     const srcDir = path.join(WORKING_DIR, dir);
 
     console.log(`--Building ${dir}...`);
+    execSync(`npm --prefix ${srcDir} install`, { stdio: "inherit" });
     execSync(`npm --prefix ${srcDir} run build:lambda`, { stdio: "inherit" });
     execSync(`cp ${srcDir}/${dir}.zip ${distPath}`, { stdio: "inherit" });
     console.log(`--${dir} complete!`);
