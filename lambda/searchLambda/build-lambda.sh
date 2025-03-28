@@ -19,7 +19,7 @@ cp package.json package/
 
 # Install only production dependencies in the package directory
 pushd package > /dev/null
-npm install --only=production
+npm install --omit=dev
 popd > /dev/null
 
 # Create a zip file containing everything from the package directory at the zip root

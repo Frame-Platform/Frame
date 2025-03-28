@@ -49,6 +49,7 @@ zip -r ../sharp-lambda-layer.zip nodejs/
 
 # Return to the original directory
 cd ..
+mv sharp-lambda-layer.zip ../lambda-layer.zip
 
 echo "Sharp layer created at $(pwd)/sharp-lambda-layer.zip"
 echo "You can now upload this zip file to AWS Lambda as a layer"

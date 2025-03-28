@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "description": "A new repo",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "build:lambdas": "bash ./build-all.sh",
+    "build:lambdas": "node build-all.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
