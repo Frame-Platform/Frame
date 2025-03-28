@@ -33,10 +33,11 @@ export const pgConnect = async () => {
 export const pgInsert = async (
   embedding: number[],
   pgClient: Client,
-  url?: string,
-  desc?: string
+  url?: string | null,
+  desc?: string | null
 ): Promise<void> => {
   try {
+    // this should be removed eventually
     await pgClient.query("CREATE EXTENSION IF NOT EXISTS vector");
     await pgClient.query(`CREATE TABLE IF NOT EXISTS documents (
                                 id SERIAL PRIMARY KEY,
@@ -46,6 +47,9 @@ export const pgInsert = async (
                                 timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                                 CONSTRAINT unique_url_desc UNIQUE (url, description)
                                 )`);
+
+    if (await documentExists(pgClient, url, desc)) return;
+
     const query = `
               INSERT INTO documents (embedding, url, description)
               VALUES ($1, $2, $3)
@@ -59,6 +63,26 @@ export const pgInsert = async (
   } catch (e) {
     throw new Error(`Error inserting document into database: ${e}`);
   }
+};
+
+const documentExists = async (
+  pgClient: Client,
+  url?: string | null,
+  desc?: string | null
+) => {
+  const { rows } = await pgClient.query(
+    `
+      SELECT 1
+      FROM documents
+      WHERE
+        (url = $1 OR ($1 IS NULL AND url IS NULL)) AND
+        (description = $2 OR ($2 IS NULL AND description IS NULL))
+      LIMIT 1;
+    `,
+    [url, desc]
+  );
+
+  return rows.length > 0 ? true : false;
 };
 
 export const resizeImageToLimit = async (

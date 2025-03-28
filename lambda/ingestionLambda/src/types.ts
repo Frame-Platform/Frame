@@ -2,8 +2,8 @@ import z from "zod";
 
 export const payloadSchema = z
   .object({
-    url: z.string().url().optional(),
-    desc: z.string().optional(),
+    url: z.string().url().optional().nullable(),
+    desc: z.string().optional().nullable(),
   })
   .refine((data) => data.url || data.desc, {
     message: "Either url or desc must be provided",
