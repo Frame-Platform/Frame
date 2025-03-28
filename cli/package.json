@@ -1,0 +1,41 @@
+{
+  "name": "document-embedding-cli",
+  "version": "1.0.0",
+  "description": "CLI tool for deploying AWS CDK stacks with custom configurations",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "document-embedding": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "document",
+    "embedding",
+    "cli",
+    "aws",
+    "cdk"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "dotenv": "^16.4.7",
+    "inquirer": "^12.5.0",
+    "ora": "^8.2.0"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^22.13.13",
+    "typescript": "^5.8.2"
+  }
+}
