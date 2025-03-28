@@ -1,5 +1,6 @@
 # Node.js / Lambda
 node_modules/
+node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -7,8 +8,14 @@ pnpm-debug.log*
 .env
 .env.local
 .env.*.local
+.env2
 .DS_Store
 *.zip
+*.d.ts
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
 
 # AWS SAM or other Lambda build artifacts (if applicable)
 .aws-sam/
@@ -30,3 +37,7 @@ Thumbs.db
 
 # Ignore lambda layer build folders
 **/nodejs/
+
+# Include lambda layer zip files
+!lambda/layers/**/*.zip
+!jest.config.js

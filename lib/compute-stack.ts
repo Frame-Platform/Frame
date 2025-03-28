@@ -36,6 +36,33 @@ export class ComputeStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: ComputeStackProps) {
     super(scope, id, props);
 
+    // Create Lambda layers
+    const s3Layer = new lambda.LayerVersion(this, "S3Layer", {
+      code: lambda.Code.fromAsset("lambda/layers/aws-sdk-s3/lambda-layer.zip"),
+    });
+
+    const dotenvLayer = new lambda.LayerVersion(this, "DotenvLayer", {
+      code: lambda.Code.fromAsset("lambda/layers/dotenv/lambda-layer.zip"),
+    });
+
+    const honoProxyLayer = new lambda.LayerVersion(this, "HonoProxyLayer", {
+      code: lambda.Code.fromAsset(
+        "lambda/layers/honoProxyLayer/lambda-layer.zip"
+      ),
+    });
+
+    const pgLayer = new lambda.LayerVersion(this, "PGLayer", {
+      code: lambda.Code.fromAsset("lambda/layers/pg/lambda-layer.zip"),
+    });
+
+    const sharpLayer = new lambda.LayerVersion(this, "SharpLayer", {
+      code: lambda.Code.fromAsset("lambda/layers/sharp/lambda-layer.zip"),
+    });
+
+    const zodLayer = new lambda.LayerVersion(this, "ZodLayer", {
+      code: lambda.Code.fromAsset("lambda/layers/zod/lambda-layer.zip"),
+    });
+
     // Create base IAM role for Lambda functions
     // Enables lambdas to Write logs to CloudWatch Logs
     // (create log groups, create log streams, and put log events)
@@ -79,7 +106,7 @@ export class ComputeStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_22_X,
       handler: "index.handler",
       // NOTE: Still need code and to route to correct file
-      code: lambda.Code.fromAsset("lambda/api"),
+      code: lambda.Code.fromAsset("lambda/lambdaDist/honoProxy.zip"),
       memorySize: 1024,
       timeout: cdk.Duration.seconds(30),
       environment: {
@@ -91,6 +118,7 @@ export class ComputeStack extends cdk.Stack {
         IMAGE_BUCKET_NAME: props.imageBucket.bucketName,
       },
       role: apiLambdaRole,
+      layers: [s3Layer, pgLayer, dotenvLayer, honoProxyLayer],
     });
 
     // Grant API Lambda permission to send messages to SQS
@@ -132,7 +160,7 @@ export class ComputeStack extends cdk.Stack {
         runtime: lambda.Runtime.NODEJS_22_X,
         handler: "index.handler",
         // NOTE: Still need code and to route to correct file
-        code: lambda.Code.fromAsset("lambda/imageIngestion"),
+        code: lambda.Code.fromAsset("lambda/lambdaDist/ingestionLambda.zip"),
         memorySize: 1024, // Higher memory for image processing
         // Default memory is 128MB - Max is 10,240 MB
         // Longer timeout for image ingestion Lambda
@@ -144,6 +172,7 @@ export class ComputeStack extends cdk.Stack {
           BEDROCK_MODEL_ID: "amazon.titan-embed-image-v1",
         },
         role: imageIngestionRole,
+        layers: [sharpLayer, pgLayer, dotenvLayer, zodLayer],
       }
     );
 
@@ -187,7 +216,7 @@ export class ComputeStack extends cdk.Stack {
       runtime: lambda.Runtime.NODEJS_22_X,
       handler: "index.handler",
       // NOTE: Still need code and to route to correct file
-      code: lambda.Code.fromAsset("lambda/search"),
+      code: lambda.Code.fromAsset("lambda/lambdaDist/searchLambda.zip"),
       // Higher memory for image processing
       // Default memory is 128MB - Max is 10,240 MB
       memorySize: 1024,
@@ -200,6 +229,7 @@ export class ComputeStack extends cdk.Stack {
         BEDROCK_MODEL_ID: "amazon.titan-embed-image-v1",
       },
       role: searchRole,
+      layers: [sharpLayer, pgLayer, zodLayer],
     });
 
     // Update API Lambda environment with Search Lambda ARN
