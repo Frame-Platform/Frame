@@ -4,6 +4,7 @@
   "bin": {
     "cdk": "bin/cdk.js"
   },
+  "type": "module",
   "scripts": {
     "build:lambdas": "node build-all.js",
     "build": "tsc",
