@@ -27,6 +27,7 @@ export const handler = async (
       imagePayload = { inputImage: resizedBuffer.toString("base64") };
     }
 
+    // gather titan inputs
     const textPayload = desc ? { inputText: desc } : {};
     const payload: TitanInputType = { ...imagePayload, ...textPayload };
 
@@ -48,11 +49,15 @@ export const handler = async (
       WHERE
           1 - (embedding <=> $1::vector) >= $2
       ORDER BY
-          cosine_similarity DESC
+          score DESC
       LIMIT $3;
       `;
 
-    const results = await pgClient.query(query, [embedding, threshold, topK]);
+    const results = await pgClient.query(query, [
+      JSON.stringify(embedding),
+      threshold,
+      topK,
+    ]);
 
     return {
       statusCode: 200,
