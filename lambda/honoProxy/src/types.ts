@@ -172,6 +172,13 @@ export const paginationSchema = z.object({
     .transform((val) => (val ? parseInt(val, 10) : 0)),
 });
 
+export const deleteSchema = z.object({
+  id: z
+    .string()
+    .transform((val) => parseInt(val, 10))
+    .refine((data) => data && data > 0, { message: "Invalid ID" }),
+});
+
 export type SearchMessageType = {
   threshold: number;
   topK: number;

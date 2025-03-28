@@ -5,6 +5,7 @@ import {
   uploadImageToS3,
   deleteImageFromS3,
   pgGetDocuments,
+  pgDeleteDocument,
 } from "./utils";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
@@ -17,6 +18,7 @@ import {
   searchMultipartSchema,
   paginationSchema,
   SearchMessageType,
+  deleteSchema,
 } from "./types";
 import { sendToSQS } from "./utils";
 const REGION = "us-east-1";
@@ -276,6 +278,68 @@ app.openapi(
     } finally {
       if (imageKey) {
         await deleteImageFromS3(imageKey);
+      }
+    }
+  }
+);
+
+app.openapi(
+  createRoute({
+    method: "delete",
+    path: "/delete/{id}",
+    request: {
+      params: deleteSchema,
+      description: "Deletes a specific document by ID",
+    },
+    responses: {
+      200: {
+        description: "Successful deletion of the document",
+        content: {
+          "application/json": {
+            schema: z.object({
+              id: z.number(),
+              success: z.boolean(),
+              message: z.string(),
+            }),
+          },
+        },
+      },
+      400: {
+        description: "Bad Request",
+        content: {
+          "application/json": {
+            schema: errorResponseSchema,
+          },
+        },
+      },
+      500: {
+        description: "Server Error",
+        content: {
+          "application/json": {
+            schema: errorResponseSchema,
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    try {
+      const { id } = c.req.valid("param");
+
+      const { success, message } = await pgDeleteDocument(id);
+
+      const result = {
+        id,
+        success,
+        message,
+      };
+
+      return c.json(result, 200);
+    } catch (e) {
+      if (e instanceof Error) {
+        return c.json({ error: e.message }, 500);
+      } else {
+        return c.json({ error: "Internal Server Error" }, 500);
       }
     }
   }

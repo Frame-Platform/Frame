@@ -53,6 +53,28 @@ export const pgGetDocuments = async (
   }
 };
 
+export const pgDeleteDocument = async (id: number) => {
+  try {
+    if (!pgClient) {
+      pgClient = await pgConnect();
+    }
+    const query = `
+      DELETE FROM documents WHERE id = $1 RETURNING *;
+    `;
+    const result = await pgClient.query(query, [id]);
+    if (result.rowCount === 0) {
+      return { success: false, message: `No document found with ID ${id}` };
+    }
+
+    return {
+      success: true,
+      message: `Document with ID ${id} deleted successfully.`,
+    };
+  } catch (e) {
+    throw new Error(`Failed to delete document: ${e}`);
+  }
+};
+
 export async function sendToSQS(
   images: ValidImageResult[],
   sqsClient: SQSClient
