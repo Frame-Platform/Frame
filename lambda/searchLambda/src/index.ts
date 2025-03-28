@@ -1,14 +1,22 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { payloadSchema, TitanInputType } from "./types";
 import { ZodError } from "zod";
+import { Client } from "pg";
+import dotenv from "dotenv";
+import {
+  downloadImage,
+  resizeImageToLimit,
+  callTitan,
+  pgConnect,
+} from "./utils";
 
-import { downloadImage, resizeImageToLimit, callTitan } from "./utils";
+dotenv.config();
+let pgClient: null | Client = null;
 
 export const handler = async (
   event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
   try {
-    console.log(event);
     const validationResult = payloadSchema.parse(event);
     const { url, desc, threshold, topK } = validationResult;
 
@@ -19,20 +27,36 @@ export const handler = async (
       imagePayload = { inputImage: resizedBuffer.toString("base64") };
     }
 
-    // gather titan inputs
     const textPayload = desc ? { inputText: desc } : {};
     const payload: TitanInputType = { ...imagePayload, ...textPayload };
 
-    // call titan model for embeddings
     const res = await callTitan(payload);
     const embedding = res.embedding;
 
-    // query RDS Postgres PGVector
-    const rdsResults = {};
+    if (!pgClient) {
+      pgClient = await pgConnect();
+    }
+    const query = `
+      SELECT
+          id,
+          url,
+          description,
+          timestamp,
+          1 - (embedding <=> $1::vector) AS score
+      FROM
+          documents
+      WHERE
+          1 - (embedding <=> $1::vector) >= $2
+      ORDER BY
+          cosine_similarity DESC
+      LIMIT $3;
+      `;
+
+    const results = await pgClient.query(query, [embedding, threshold, topK]);
 
     return {
       statusCode: 200,
-      body: JSON.stringify(embedding),
+      body: JSON.stringify(results.rows),
     };
   } catch (e) {
     console.log(e);
