@@ -4,6 +4,27 @@ import {
   InvokeModelCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 import { TitanInputType } from "./types";
+import { Client } from "pg";
+
+export const pgConnect = async () => {
+  try {
+    const pgClient = new Client({
+      host: process.env.HOST_NAME,
+      port: Number(process.env.PORT) || 5432,
+      database: process.env.DB_NAME,
+      user: process.env.POSTGRES_USER,
+      password: process.env.POSTGRES_PASSWORD,
+      ssl: {
+        rejectUnauthorized: false,
+      },
+    });
+
+    await pgClient.connect();
+    return pgClient;
+  } catch (e) {
+    throw new Error(`Error connecting to database: ${e}`);
+  }
+};
 
 export const callTitan = async (payload: TitanInputType) => {
   try {
