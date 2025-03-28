@@ -1,0 +1,29 @@
+# Node.js / Lambda
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.env
+.env.local
+.env.*.local
+.DS_Store
+*.zip
+
+# AWS SAM or other Lambda build artifacts (if applicable)
+.aws-sam/
+
+# Vite React Frontend
+dist/
+.vite/
+
+# Build outputs
+build/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Editor / IDE directories
+.vscode/
+.idea/
