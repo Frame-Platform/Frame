@@ -2,6 +2,11 @@ import { spawn, SpawnOptions } from "child_process";
 import * as path from "path";
 import chalk from "chalk";
 import { deploymentOutputs } from "../types/deploymentTypes.js";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Helper function to execute shell commands
 export const execCommand = async (
@@ -22,8 +27,9 @@ export const execCommand = async (
 
     // For CDK commands, set working directory to CDK app location
     if (program === "cdk") {
-      options.cwd = path.resolve(process.cwd(), "../");
-      // console.log(chalk.dim(`Running CDK command in: ${options.cwd}`));
+      options.cwd = path.resolve(__dirname, "../../../");
+      //options.cwd = path.resolve(process.cwd(), "../../"); // NOTE: Path changed from ../
+      console.log(chalk.dim(`Running CDK command in: ${options.cwd}`));
     }
 
     // Spawn the process with the options
