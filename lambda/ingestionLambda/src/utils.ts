@@ -39,7 +39,13 @@ export const pgInsert = async (
   try {
     await pgClient.query("CREATE EXTENSION IF NOT EXISTS vector");
     await pgClient.query(
-      `CREATE TABLE IF NOT EXISTS documents (id SERIAL PRIMARY KEY, embedding vector(1024) NOT NULL, url TEXT, description TEXT)`
+      `CREATE TABLE IF NOT EXISTS documents (
+      id SERIAL PRIMARY KEY,
+      embedding vector(1024) NOT NULL,
+      url TEXT,
+      description TEXT,
+      timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`
     );
     const query = `
               INSERT INTO documents (embedding, url, description)
