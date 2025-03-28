@@ -1,11 +1,11 @@
 import { handle } from "hono/aws-lambda";
+import { SQSClient } from "@aws-sdk/client-sqs";
 import {
   invokeSearchLambda,
   uploadImageToS3,
   deleteImageFromS3,
   pgGetDocuments,
 } from "./utils";
-
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
 import {
@@ -19,6 +19,7 @@ import {
   SearchMessageType,
 } from "./types";
 import { sendToSQS } from "./utils";
+const REGION = "us-east-1";
 
 const app = new OpenAPIHono();
 
@@ -30,7 +31,7 @@ app.openapi(
     path: "/document",
     request: {
       query: paginationSchema.openapi({
-        example: { page: "1", perPage: "10" },
+        example: { limit: "1", offset: "10" },
       }),
       description: "Retrieves a paginated list of documents",
     },
@@ -41,8 +42,8 @@ app.openapi(
           "application/json": {
             schema: z.object({
               documents: z.array(z.object({})),
-              page: z.number(),
-              perPage: z.number(),
+              limit: z.number(),
+              offset: z.number(),
               total: z.number(),
             }),
           },
@@ -60,15 +61,18 @@ app.openapi(
   }),
   async (c) => {
     try {
-      const { page, perPage } = c.req.valid("query");
-      const documents = await pgGetDocuments(perPage, page);
+      const { limit, offset } = c.req.valid("query");
+      const documents = await pgGetDocuments(limit, offset);
 
-      return c.json({
-        documents,
-        page,
-        perPage,
-        total: documents.length,
-      }, 200);
+      return c.json(
+        {
+          documents,
+          limit,
+          offset,
+          total: documents.length,
+        },
+        200
+      );
     } catch (e) {
       return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
     }
@@ -104,7 +108,7 @@ app.openapi(
       content: `Content for document ${id}`,
     };
     return c.json(document);
-  },
+  }
 );
 
 app.openapi(
@@ -144,19 +148,26 @@ app.openapi(
   async (c) => {
     try {
       const { images } = c.req.valid("json");
+      const sqsClient = new SQSClient({ region: REGION });
       const validatedImages = await Promise.all(images.map(validateImage));
-      const sqsResults = await Promise.allSettled(
-        validatedImages.map(sendToSQS),
-      );
+      const sqsResults = await sendToSQS(validatedImages, sqsClient);
 
-      const messageStatuses = sqsResults.map((result, i) => {
-        const currImg = validatedImages[i];
+      const successfulMessages = sqsResults.Successful || [];
+      const failedMessages = sqsResults.Failed || [];
+
+      const messageStatuses = validatedImages.map((image, index) => {
+        const successEntry = successfulMessages.find(
+          (msg) => msg.Id === index.toString()
+        );
+        const failedEntry = failedMessages.find(
+          (msg) => msg.Id === index.toString()
+        );
 
         return {
-          url: currImg.url,
-          desc: currImg.desc,
-          success: result.status === "fulfilled" ? true : false,
-          errors: "reason" in result ? result.reason : "",
+          url: image.url,
+          desc: image.desc,
+          success: !!successEntry,
+          errors: failedEntry ? failedEntry.Message || "Unknown Error" : "",
         };
       });
 
@@ -164,7 +175,7 @@ app.openapi(
     } catch (e) {
       return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
     }
-  },
+  }
 );
 
 // Middleware for parsing multipart form data before zod validation.
@@ -267,7 +278,7 @@ app.openapi(
         await deleteImageFromS3(imageKey);
       }
     }
-  },
+  }
 );
 
 app.get("/doc", (c) => {

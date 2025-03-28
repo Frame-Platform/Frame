@@ -1,4 +1,4 @@
-import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
+import { SQSClient, SendMessageBatchCommand } from "@aws-sdk/client-sqs";
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 import { Client } from "pg";
 import dotenv from "dotenv";
@@ -9,17 +9,15 @@ import {
 } from "@aws-sdk/client-s3";
 const QUEUE_URL =
   "https://sqs.us-east-1.amazonaws.com/982227461113/ingestionQueue";
-const REGION = "us-east-1";
-const sqsClient = new SQSClient({ region: REGION });
-
 dotenv.config();
+let pgClient: null | Client = null;
 
 const pgConnect = async () => {
   try {
     const pgClient = new Client({
       host: process.env.HOST_NAME,
       port: Number(process.env.PORT) || 5432,
-      database: process.env.DBNAME,
+      database: process.env.DB_NAME,
       user: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       ssl: {
@@ -35,48 +33,59 @@ const pgConnect = async () => {
 };
 
 export const pgGetDocuments = async (
-  limit: string | number = 'ALL',
-  offset: string | number = 0,
+  limit: number, // default limit is 1mil, default offset is 0 => returns all
+  offset: number
 ) => {
   try {
-    const pgClient = await pgConnect();
+    if (!pgClient) {
+      pgClient = await pgConnect();
+    }
 
     const query = `
             SELECT id, url, description FROM documents
             ORDER BY id DESC LIMIT $1 OFFSET $2
     `;
     const { rows } = await pgClient.query(query, [limit, offset]);
-
-    await pgClient.end();
     return rows;
   } catch (e) {
-    throw new Error(`Error getting documents`);
+    throw new Error(`Error getting documents: ${e}`);
   }
-}
+};
 
-export async function sendToSQS(image: {
-  success: boolean;
-  errors?: string;
-  url: string;
-  desc?: string;
-}) {
-  // Reject the promise if an individual image/document fails validation instead of throwing an error to allow the rest of the messages to process
-  if (!image.success) {
-    return Promise.reject(image.errors);
+export async function sendToSQS(
+  images: { success: boolean; errors?: string; url: string; desc?: string }[],
+  sqsClient: SQSClient
+) {
+  // Filter out invalid images to avoid sending bad requests
+  const validImages = images.filter((image) => image.success);
+
+  if (validImages.length === 0) {
+    return { Failed: [], Successful: [] };
   }
-  const messageBody = JSON.stringify({
-    url: image.url,
-    desc: image.desc || null,
-    timestamp: new Date().toISOString(),
-  });
 
-  const command = new SendMessageCommand({
+  const entries = validImages.map((image, index) => ({
+    Id: index.toString(), // Unique identifier per batch message
+    MessageBody: JSON.stringify({
+      url: image.url,
+      desc: image.desc || null,
+      timestamp: new Date().toISOString(),
+    }),
+  }));
+
+  const command = new SendMessageBatchCommand({
     QueueUrl: QUEUE_URL,
-    MessageBody: messageBody,
+    Entries: entries,
   });
 
-  return sqsClient.send(command);
+  try {
+    const response = await sqsClient.send(command);
+    return response; // Contains Successful and Failed fields
+  } catch (error) {
+    console.error("Error sending batch to SQS:", error);
+    throw error;
+  }
 }
+
 export const deleteImageFromS3 = async (key: string) => {
   const region = "us-east-1";
   const bucketName = "temp-search-bucket";
@@ -136,7 +145,7 @@ export const invokeSearchLambda = async (message: {
     });
     const res = await lambdaClient.send(command);
     const payloadString = Buffer.from(res.Payload as Uint8Array).toString(
-      "utf8",
+      "utf8"
     );
     return JSON.parse(payloadString);
   } catch (e) {

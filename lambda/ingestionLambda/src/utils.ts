@@ -6,21 +6,16 @@ import { Client } from "pg";
 import dotenv from "dotenv";
 import sharp from "sharp";
 import { TitanInputType } from "./types";
-dotenv.config();
-
 const AWS_REGION = "us-east-1";
 const EMBEDDING_MODEL = "amazon.titan-embed-image-v1";
+dotenv.config();
 
-export const pgInsert = async (
-  embedding: number[],
-  url?: string,
-  desc?: string
-): Promise<void> => {
+export const pgConnect = async () => {
   try {
     const pgClient = new Client({
       host: process.env.HOST_NAME,
       port: Number(process.env.PORT) || 5432,
-      database: process.env.DBNAME,
+      database: process.env.DB_NAME,
       user: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       ssl: {
@@ -29,9 +24,22 @@ export const pgInsert = async (
     });
 
     await pgClient.connect();
+    return pgClient;
+  } catch (e) {
+    throw new Error(`Error connecting to database: ${e}`);
+  }
+};
+
+export const pgInsert = async (
+  embedding: number[],
+  pgClient: Client,
+  url?: string,
+  desc?: string
+): Promise<void> => {
+  try {
     await pgClient.query("CREATE EXTENSION IF NOT EXISTS vector");
     await pgClient.query(
-      "CREATE TABLE IF NOT EXISTS documents (id SERIAL PRIMARY KEY, embedding vector(1024), url TEXT, description TEXT)"
+      `CREATE TABLE IF NOT EXISTS documents (id SERIAL PRIMARY KEY, embedding vector(1024) NOT NULL, url TEXT, description TEXT)`
     );
     const query = `
               INSERT INTO documents (embedding, url, description)
@@ -40,9 +48,8 @@ export const pgInsert = async (
 
     // if url or desc is undefined, row will have a NULL value
     await pgClient.query(query, [JSON.stringify(embedding), url, desc]);
-    await pgClient.end();
   } catch (e) {
-    throw new Error(`Error connecting to Postgres`);
+    throw new Error(`Error inserting document into database: ${e}`);
   }
 };
 

@@ -42,7 +42,7 @@ export const searchMultipartSchema = z
           },
           {
             message: "Invalid image type. Only JPEG and PNG are allowed",
-          },
+          }
         )
         .refine(
           (file) => {
@@ -50,9 +50,11 @@ export const searchMultipartSchema = z
             return file.size > 0 && file.size <= MAX_SIZE;
           },
           {
-            message: `File size must be between 0 and ${MAX_SIZE / 1024 / 1024} MB`,
-          },
-        ),
+            message: `File size must be between 0 and ${
+              MAX_SIZE / 1024 / 1024
+            } MB`,
+          }
+        )
     ),
     desc: z.string().optional(),
     threshold: z
@@ -145,14 +147,14 @@ export const validateImage = async ({ url, desc }: DocumentEntryType) => {
 };
 
 export const paginationSchema = z.object({
-  page: z
+  limit: z
     .string()
     .optional()
-    .transform((val) => (val ? parseInt(val, 10) : 1)),
-  perPage: z
+    .transform((val) => (val ? parseInt(val, 10) : 1000000)),
+  offset: z
     .string()
     .optional()
-    .transform((val) => (val ? parseInt(val, 10) : 10)),
+    .transform((val) => (val ? parseInt(val, 10) : 0)),
 });
 
 export type SearchMessageType = {
