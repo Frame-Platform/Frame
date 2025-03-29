@@ -37,9 +37,9 @@ export const searchHandler: RouteHandler<typeof searchRoute> = async (c) => {
     if (message === undefined) {
       throw new Error("Error message undefined");
     }
-    const payloadString = await invokeSearchLambda(message);
+    const documents = await invokeSearchLambda(message);
 
-    return c.json({ results: payloadString }, 200);
+    return c.json({ hits: documents, count: documents.length }, 200);
   } catch (error) {
     if (error instanceof Error) {
       return c.json({ error: error.message }, 500);
