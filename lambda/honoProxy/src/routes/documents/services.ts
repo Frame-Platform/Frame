@@ -1,7 +1,7 @@
 import { pgConnect } from "../../db";
 import { SQSClient } from "@aws-sdk/client-sqs";
 import { SendMessageBatchCommand } from "@aws-sdk/client-sqs";
-import { DocumentEntryType, ValidImageResult } from "./schema";
+import { BaseDocumentType, ValidImageResult } from "./schema";
 
 export const pgGetDocuments = async (
   limit: number, // default limit is 1mil, default offset is 0 => returns all
@@ -42,7 +42,7 @@ export const pgDeleteDocument = async (id: number) => {
   try {
     const pgClient = await pgConnect();
     const query = `
-      DELETE FROM documents WHERE id = $1 RETURNING *;
+      DELETE FROM documents WHERE id = $1 RETURNING id, url, desc;
     `;
     const result = await pgClient.query(query, [id]);
     if (result.rowCount === 0) {
@@ -50,6 +50,7 @@ export const pgDeleteDocument = async (id: number) => {
     }
 
     return {
+      document: result.rows[0],
       success: true,
       message: `Document with ID ${id} deleted successfully.`,
     };
@@ -98,7 +99,7 @@ import { imageResponseSchema } from "./schema";
 export const validateImage = async ({
   url,
   desc,
-}: DocumentEntryType): Promise<ValidImageResult> => {
+}: BaseDocumentType): Promise<ValidImageResult> => {
   try {
     if (!url) return { success: true, url, desc, errors: "" };
 
