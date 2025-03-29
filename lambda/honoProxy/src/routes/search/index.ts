@@ -1,5 +1,9 @@
 import { createRoute } from "@hono/zod-openapi";
-import { searchJSONSchema, searchMultipartSchema } from "./schema";
+import {
+  searchJSONSchema,
+  searchMultipartSchema,
+  searchResultSchema,
+} from "./schema";
 import { errorResponseSchema } from "../sharedSchemas";
 import { z } from "@hono/zod-openapi";
 
@@ -26,7 +30,8 @@ export const searchRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            results: z.array(z.any()),
+            hits: searchResultSchema,
+            count: z.number(),
           }),
         },
       },

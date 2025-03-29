@@ -59,3 +59,9 @@ export const searchMultipartSchema = z
 
 export type SearchMulitpartType = z.infer<typeof searchMultipartSchema>;
 export type SearchJSONType = z.infer<typeof searchJSONSchema>;
+
+export const searchResultSchema = baseDocumentSchema.extend({
+  id: z.number(),
+  timestamp: z.string(),
+  score: z.number(),
+});

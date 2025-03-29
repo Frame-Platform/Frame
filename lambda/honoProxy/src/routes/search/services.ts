@@ -63,7 +63,8 @@ export const invokeSearchLambda = async (
     const payloadString = Buffer.from(res.Payload as Uint8Array).toString(
       "utf8",
     );
-    return JSON.parse(payloadString);
+    const lambdaRespose = JSON.parse(payloadString);
+    return JSON.parse(lambdaRespose.body);
   } catch (e) {
     throw new Error(`Error executing search ${e}`);
   }
