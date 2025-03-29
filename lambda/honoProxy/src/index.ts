@@ -6,6 +6,7 @@ import {
   deleteImageFromS3,
   pgGetDocuments,
   pgDeleteDocument,
+  pgGetById
 } from "./utils";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
@@ -100,16 +101,25 @@ app.openapi(
           },
         },
       },
+      400: {
+        description: "Bad Request",
+        content: {
+          "application/json": {
+            schema: errorResponseSchema,
+          },
+        },
+      }
     },
   }),
-  (c) => {
-    const { id } = c.req.valid("param");
-    const document = {
-      id,
-      title: `Document ${id}`,
-      content: `Content for document ${id}`,
-    };
-    return c.json(document);
+  async (c) => {
+    try {
+      const { id } = c.req.valid("param");
+      const document = await pgGetById(id);
+
+      return c.json({document}, 200 );
+    } catch (e) {
+      return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
+    }
   }
 );
 
