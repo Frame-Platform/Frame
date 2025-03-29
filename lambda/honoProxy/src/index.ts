@@ -1,13 +1,6 @@
 import { handle } from "hono/aws-lambda";
 import { SQSClient } from "@aws-sdk/client-sqs";
-import {
-  invokeSearchLambda,
-  uploadImageToS3,
-  deleteImageFromS3,
-  pgGetDocuments,
-  pgDeleteDocument,
-  pgGetById
-} from "./utils";
+import { pgGetDocuments, pgDeleteDocument, pgGetById } from "./utils";
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import { cors } from "hono/cors";
 import {
@@ -15,13 +8,12 @@ import {
   validateImageResultSchema,
   errorResponseSchema,
   validateImage,
-  searchJSONSchema,
-  searchMultipartSchema,
   paginationSchema,
-  SearchMessageType,
   deleteSchema,
 } from "./types";
 import { sendToSQS } from "./utils";
+import { searchRoute } from "./routes/search";
+import { searchHandler } from "./routes/search/handler";
 const REGION = "us-east-1";
 
 const app = new OpenAPIHono();
@@ -74,12 +66,12 @@ app.openapi(
           offset,
           total: documents.length,
         },
-        200
+        200,
       );
     } catch (e) {
       return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
     }
-  }
+  },
 );
 
 app.openapi(
@@ -108,7 +100,7 @@ app.openapi(
             schema: errorResponseSchema,
           },
         },
-      }
+      },
     },
   }),
   async (c) => {
@@ -116,11 +108,11 @@ app.openapi(
       const { id } = c.req.valid("param");
       const document = await pgGetById(id);
 
-      return c.json({document}, 200 );
+      return c.json({ document }, 200);
     } catch (e) {
       return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
     }
-  }
+  },
 );
 
 app.openapi(
@@ -169,10 +161,10 @@ app.openapi(
 
       const messageStatuses = validatedImages.map((image, index) => {
         const successEntry = successfulMessages.find(
-          (msg) => msg.Id === index.toString()
+          (msg) => msg.Id === index.toString(),
         );
         const failedEntry = failedMessages.find(
-          (msg) => msg.Id === index.toString()
+          (msg) => msg.Id === index.toString(),
         );
 
         return {
@@ -187,7 +179,7 @@ app.openapi(
     } catch (e) {
       return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
     }
-  }
+  },
 );
 
 // Middleware for parsing multipart form data before zod validation.
@@ -199,99 +191,7 @@ app.use("/search", async (c, next) => {
   return await next();
 });
 
-app.openapi(
-  createRoute({
-    method: "post",
-    path: "/search",
-    request: {
-      body: {
-        content: {
-          "application/json": {
-            schema: searchJSONSchema,
-          },
-          "multipart/form-data": {
-            schema: searchMultipartSchema,
-          },
-        },
-        description:
-          "This route performs a search using a document that can include a URL, a description, or both. The JSON body must have at least one of these fields. It also accepts two optional parameters: threshold (0.0 to 1.0, default 0) and topK (default 10) to fine-tune the search. ",
-      },
-    },
-    responses: {
-      200: {
-        description: "Successful search results",
-        content: {
-          "application/json": {
-            schema: z.object({
-              results: z.array(z.any()),
-            }),
-          },
-        },
-      },
-      400: {
-        description: "Bad Request",
-        content: {
-          "application/json": {
-            schema: errorResponseSchema,
-          },
-        },
-      },
-      500: {
-        description: "Server Error",
-        content: {
-          "application/json": {
-            schema: errorResponseSchema,
-          },
-        },
-      },
-    },
-  }),
-  async (c) => {
-    let imageKey: string | null = null;
-    try {
-      const contentType = c.req.header("Content-Type") || "";
-      let message: SearchMessageType | undefined;
-
-      if (contentType.startsWith("application/json")) {
-        const jsonData = c.req.valid("json");
-        message = jsonData;
-      } else if (contentType.startsWith("multipart/form-data")) {
-        const { image, desc, threshold, topK } = c.req.valid("form") as z.infer<
-          typeof searchMultipartSchema
-        >;
-
-        message = {
-          ...(desc && { desc }),
-          threshold,
-          topK,
-        };
-
-        if (image && image.size > 0) {
-          const { url, key } = await uploadImageToS3(image);
-          imageKey = key;
-          message = { ...message, url };
-        }
-      }
-
-      if (message === undefined) {
-        throw new Error("Error message undefined");
-      }
-      const payloadString = await invokeSearchLambda(message);
-
-      return c.json({ results: payloadString }, 200);
-    } catch (error) {
-      if (error instanceof Error) {
-        return c.json({ error: error.message }, 500);
-      } else {
-        return c.json({ error: "Internal Server Error" }, 500);
-      }
-    } finally {
-      if (imageKey) {
-        await deleteImageFromS3(imageKey);
-      }
-    }
-  }
-);
+app.openapi(searchRoute, searchHandler);
 
 app.openapi(
   createRoute({
@@ -352,7 +252,7 @@ app.openapi(
         return c.json({ error: "Internal Server Error" }, 500);
       }
     }
-  }
+  },
 );
 
 app.get("/doc", (c) => {
