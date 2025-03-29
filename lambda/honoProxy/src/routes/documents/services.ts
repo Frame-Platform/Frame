@@ -17,3 +17,20 @@ export const pgGetDocuments = async (
     throw new Error(`Error getting documents: ${e}`);
   }
 };
+
+export const pgGetById = async (id: string | number) => {
+  try {
+    const pgClient = await pgConnect();
+
+    const query = `
+             SELECT id, url, description FROM documents WHERE id = $1
+    `;
+
+    const { rows } = await pgClient.query(query, [id]);
+
+    await pgClient.end();
+    return rows;
+  } catch (e) {
+    throw new Error(`Error getting document by id`);
+  }
+};

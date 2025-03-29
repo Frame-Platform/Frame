@@ -36,3 +36,32 @@ export const getDocumentsRoute = createRoute({
     },
   },
 });
+
+export const getDocumentByIdRoute = createRoute({
+  method: "get",
+  path: "/document/:id",
+  request: {
+    params: z.object({
+      id: z.string().openapi({ param: { name: "id", in: "path" } }),
+    }),
+    description: "Retrieves a specific document by ID",
+  },
+  responses: {
+    200: {
+      description: "Successful retrieval of the document",
+      content: {
+        "application/json": {
+          schema: z.object({}),
+        },
+      },
+    },
+    400: {
+      description: "Bad Request",
+      content: {
+        "application/json": {
+          schema: errorResponseSchema,
+        },
+      },
+    },
+  },
+});

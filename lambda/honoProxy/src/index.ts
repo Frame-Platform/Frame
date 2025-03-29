@@ -13,8 +13,11 @@ import {
 import { sendToSQS } from "./utils";
 import { searchRoute } from "./routes/search";
 import { searchHandler } from "./routes/search/handler";
-import { getDocumentsRoute } from "./routes/documents";
-import { getDocumentsHandler } from "./routes/documents/handlers";
+import { getDocumentByIdRoute, getDocumentsRoute } from "./routes/documents";
+import {
+  getDocumentByIdHandler,
+  getDocumentsHandler,
+} from "./routes/documents/handlers";
 const REGION = "us-east-1";
 
 const app = new OpenAPIHono();
@@ -22,47 +25,7 @@ const app = new OpenAPIHono();
 app.use(cors({ origin: "*" }));
 
 app.openapi(getDocumentsRoute, getDocumentsHandler);
-
-app.openapi(
-  createRoute({
-    method: "get",
-    path: "/document/:id",
-    request: {
-      params: z.object({
-        id: z.string().openapi({ param: { name: "id", in: "path" } }),
-      }),
-      description: "Retrieves a specific document by ID",
-    },
-    responses: {
-      200: {
-        description: "Successful retrieval of the document",
-        content: {
-          "application/json": {
-            schema: z.object({}),
-          },
-        },
-      },
-      400: {
-        description: "Bad Request",
-        content: {
-          "application/json": {
-            schema: errorResponseSchema,
-          },
-        },
-      },
-    },
-  }),
-  async (c) => {
-    try {
-      const { id } = c.req.valid("param");
-      const document = await pgGetById(id);
-
-      return c.json({ document }, 200);
-    } catch (e) {
-      return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
-    }
-  },
-);
+app.openapi(getDocumentByIdRoute, getDocumentByIdHandler);
 
 app.openapi(
   createRoute({
