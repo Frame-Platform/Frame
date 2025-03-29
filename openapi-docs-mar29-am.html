@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Swagger UI</title>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://unpkg.com/swagger-ui-dist/swagger-ui.css"
+    />
+  </head>
+
+  <body>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+    <script>
+      const spec = {
+        openapi: "3.0.0",
+        info: {
+          version: "1.0.0",
+          title: "My API",
+        },
+        components: {
+          schemas: {},
+          parameters: {},
+        },
+        paths: {
+          "/document": {
+            get: {
+              parameters: [
+                {
+                  schema: {
+                    type: "string",
+                  },
+                  required: false,
+                  name: "limit",
+                  in: "query",
+                },
+                {
+                  schema: {
+                    type: "string",
+                  },
+                  required: false,
+                  name: "offset",
+                  in: "query",
+                },
+              ],
+              responses: {
+                200: {
+                  description: "Successful retrieval of documents",
+                  content: {
+                    "application/json": {
+                      schema: {
+                        type: "object",
+                        properties: {
+                          documents: {
+                            type: "array",
+                            items: {
+                              type: "object",
+                              properties: {},
+                            },
+                          },
+                          limit: {
+                            type: "number",
+                          },
+                          offset: {
+                            type: "number",
+                          },
+                          total: {
+                            type: "number",
+                          },
+                        },
+                        required: ["documents", "limit", "offset", "total"],
+                      },
+                    },
+                  },
+                },
+                400: {
+                  description: "Bad Request",
+                  content: {
+                    "application/json": {
+                      schema: {
+                        type: "object",
+                        properties: {
+                          error: {
+                            type: "string",
+                          },
+                        },
+                        required: ["error"],
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            post: {
+              requestBody: {
+                description:
+                  "Receives images via URL and optional descriptions and queues them for embedding.",
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        images: {
+                          type: "array",
+                          items: {
+                            type: "object",
+                            properties: {
+                              url: {
+                                type: "string",
+                                nullable: true,
+                                format: "uri",
+                              },
+                              desc: {
+                                type: "string",
+                                nullable: true,
+                              },
+                            },
+                          },
+                          example: [
+                            {
+                              url: "https://example.com/image.png",
+                              desc: "Optional description",
+                            },
+                          ],
+                        },
+                      },
+                      required: ["images"],
+                    },
+                  },
+                },
+              },
+              responses: {
+                200: {
+                  description: "Validation results of images.",
+                  content: {
+                    "application/json": {
+                      schema: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            success: {
+                              type: "boolean",
+                            },
+                            url: {
+                              type: "string",
+                              nullable: true,
+                            },
+                            desc: {
+                              type: "string",
+                              nullable: true,
+                            },
+                            errors: {
+                              type: "string",
+                            },
+                          },
+                          required: ["success"],
+                        },
+                      },
+                    },
+                  },
+                },
+                400: {
+                  description: "Bad Request",
+                  content: {
+                    "application/json": {
+                      schema: {
+                        type: "object",
+                        properties: {
+                          error: {
+                            type: "string",
+                          },
+                        },
+                        required: ["error"],
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "/document/:id": {
+            get: {
+              parameters: [
+                {
+                  schema: {
+                    type: "string",
+                  },
+                  required: true,
+                  name: "id",
+                  in: "path",
+                },
+              ],
+              responses: {
+                200: {
+                  description: "Successful retrieval of the document",
+                  content: {
+                    "application/json": {
+                      schema: {
+                        type: "object",
+                        properties: {},
+                      },
+                    },
+                  },
+                },
+                400: {
+                  description: "Bad Request",
+                  content: {
+                    "application/json": {
+                      schema: {
+                        type: "object",
+                        properties: {
+                          error: {
+                            type: "string",
+                          },
+                        },
+                        required: ["error"],
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "/search": {
+            post: {
+              requestBody: {
+                description:
+                  "This route performs a search using a document that can include a URL, a description, or both. The JSON body must have at least one of these fields. It also accepts two optional parameters: threshold (0.0 to 1.0, default 0) and topK (default 10) to fine-tune the search. ",
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        url: {
+                          type: "string",
+                          format: "uri",
+                        },
+                        desc: {
+                          type: "string",
+                        },
+                        threshold: {
+                          type: "number",
+                          minimum: 0,
+                          maximum: 1,
+                          default: 0,
+                        },
+                        topK: {
+                          type: "number",
+                          default: 10,
+                        },
+                      },
+                    },
+                  },
+                  "multipart/form-data": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        image: {
+                          nullable: true,
+                        },
+                        desc: {
+                          type: "string",
+                        },
+                        threshold: {
+                          type: "number",
+                          minimum: 0,
+                          maximum: 1,
+                          default: 0,
+                        },
+                        topK: {
+                          type: "number",
+                          default: 10,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              responses: {
+                200: {
+                  description: "Successful search results",
+                  content: {
+                    "application/json": {
+                      schema: {
+                        type: "object",
+                        properties: {
+                          results: {
+                            type: "array",
+                            items: {
+                              nullable: true,
+                            },
+                          },
+                        },
+                        required: ["results"],
+                      },
+                    },
+                  },
+                },
+                400: {
+                  description: "Bad Request",
+                  content: {
+                    "application/json": {
+                      schema: {
+                        type: "object",
+                        properties: {
+                          error: {
+                            type: "string",
+                          },
+                        },
+                        required: ["error"],
+                      },
+                    },
+                  },
+                },
+                500: {
+                  description: "Server Error",
+                  content: {
+                    "application/json": {
+                      schema: {
+                        type: "object",
+                        properties: {
+                          error: {
+                            type: "string",
+                          },
+                        },
+                        required: ["error"],
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          "/delete/{id}": {
+            delete: {
+              parameters: [
+                {
+                  schema: {
+                    type: "string",
+                  },
+                  required: true,
+                  name: "id",
+                  in: "path",
+                },
+              ],
+              responses: {
+                200: {
+                  description: "Successful deletion of the document",
+                  content: {
+                    "application/json": {
+                      schema: {
+                        type: "object",
+                        properties: {
+                          id: {
+                            type: "number",
+                          },
+                          success: {
+                            type: "boolean",
+                          },
+                          message: {
+                            type: "string",
+                          },
+                        },
+                        required: ["id", "success", "message"],
+                      },
+                    },
+                  },
+                },
+                400: {
+                  description: "Bad Request",
+                  content: {
+                    "application/json": {
+                      schema: {
+                        type: "object",
+                        properties: {
+                          error: {
+                            type: "string",
+                          },
+                        },
+                        required: ["error"],
+                      },
+                    },
+                  },
+                },
+                500: {
+                  description: "Server Error",
+                  content: {
+                    "application/json": {
+                      schema: {
+                        type: "object",
+                        properties: {
+                          error: {
+                            type: "string",
+                          },
+                        },
+                        required: ["error"],
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      };
+      SwaggerUIBundle({
+        spec: spec,
+        dom_id: "#swagger-ui",
+      });
+    </script>
+  </body>
+</html>
