@@ -6,3 +6,9 @@ export const VALID_TYPES = ["image/jpeg", "image/png"];
 export const errorResponseSchema = z.object({
   error: z.string(),
 });
+
+export const baseDocumentSchema = z.object({
+  url: z.string().url({ message: "Invalid URL format" }).optional().nullable(),
+  desc: z.string().optional().nullable(),
+});
+export type BaseDocumentType = z.infer<typeof baseDocumentSchema>;

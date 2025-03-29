@@ -4,9 +4,9 @@ import { z } from "@hono/zod-openapi";
 import {
   idPathSchema,
   paginationSchema,
-  createDocumentSchema,
   validateImageResultSchema,
   documentReturnSchema,
+  documentSchema,
 } from "./schema";
 
 export const getDocumentsRoute = createRoute({
@@ -77,7 +77,7 @@ export const createDocumentRoute = createRoute({
     body: {
       content: {
         "application/json": {
-          schema: createDocumentSchema,
+          schema: z.object({ images: z.array(documentSchema) }),
         },
       },
       description:

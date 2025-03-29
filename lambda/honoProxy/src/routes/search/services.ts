@@ -4,6 +4,8 @@ import {
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
+import { searchJSONSchema } from "./schema";
+import { z } from "@hono/zod-openapi";
 
 export const deleteImageFromS3 = async (key: string) => {
   const bucketName = "temp-search-bucket";
@@ -47,12 +49,9 @@ export const uploadImageToS3 = async (image: File) => {
   }
 };
 
-export const invokeSearchLambda = async (message: {
-  threshold: number;
-  topK: number;
-  url?: string;
-  desc?: string;
-}) => {
+export const invokeSearchLambda = async (
+  message: z.infer<typeof searchJSONSchema>,
+) => {
   try {
     const lambdaClient = new LambdaClient({ region: process.env.AWS_REGION });
     const command = new InvokeCommand({

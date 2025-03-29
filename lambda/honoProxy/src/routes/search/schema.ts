@@ -1,17 +1,18 @@
 import { z } from "@hono/zod-openapi";
 import { MAX_SIZE, VALID_TYPES } from "../sharedSchemas";
+import { baseDocumentSchema } from "../sharedSchemas";
 
-export const searchJSONSchema = z
-  .object({
-    url: z.string().url({ message: "Invalid URL format" }).optional(),
-    desc: z.string().optional(),
-    threshold: z
-      .number()
-      .min(0, "Threshold must be at least 0")
-      .max(1, "Threshold must be at most 1")
-      .default(0),
-    topK: z.number().default(10),
-  })
+const searchSchema = z.object({
+  threshold: z
+    .number()
+    .min(0, "Threshold must be at least 0")
+    .max(1, "Threshold must be at most 1")
+    .default(0),
+  topK: z.number().default(10),
+});
+
+export const searchJSONSchema = baseDocumentSchema
+  .extend({ ...searchSchema.shape })
   .refine((data) => data.url || data.desc, {
     message: "At least one of url or desc must be provided.",
   });
@@ -50,13 +51,8 @@ export const searchMultipartSchema = z
         ),
     ),
     desc: z.string().optional(),
-    threshold: z
-      .number()
-      .min(0, "Threshold must be at least 0")
-      .max(1, "Threshold must be at most 1")
-      .default(0),
-    topK: z.number().default(10),
   })
+  .extend({ ...searchSchema.shape })
   .refine((data) => data.image || data.desc, {
     message: "At least one of image or desc must be provided.",
   });
