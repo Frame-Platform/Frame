@@ -1,7 +1,7 @@
 import { pgConnect } from "../../db";
 import { SQSClient } from "@aws-sdk/client-sqs";
 import { SendMessageBatchCommand } from "@aws-sdk/client-sqs";
-import { ValidImageResult } from "./schema";
+import { imageResponseSchema, ValidImageResult } from "./schema";
 import { BaseDocumentType } from "../sharedSchemas";
 
 export const pgGetDocuments = async (
@@ -60,11 +60,8 @@ export const pgDeleteDocument = async (id: number) => {
   }
 };
 
-export async function sendToSQS(
-  images: ValidImageResult[],
-  sqsClient: SQSClient,
-) {
-  // Filter out invalid images to avoid sending bad requests
+export async function sendToSQS(images: ValidImageResult[]) {
+  const sqsClient = new SQSClient({ region: process.env.AWS_REGION });
   const validImages = images.filter((image) => image.success);
 
   if (validImages.length === 0) {
@@ -94,11 +91,7 @@ export async function sendToSQS(
   }
 }
 
-import { imageResponseSchema } from "./schema";
-export const validateImage = async ({
-  url,
-  desc,
-}: BaseDocumentType): Promise<ValidImageResult> => {
+export const validateImage = async ({ url, desc }: BaseDocumentType) => {
   try {
     if (!url) return { success: true, url, desc, errors: "" };
 

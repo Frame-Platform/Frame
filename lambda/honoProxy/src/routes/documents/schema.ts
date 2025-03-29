@@ -38,21 +38,13 @@ export const validateImageResultSchema = baseDocumentSchema.extend({
 export type ValidImageResult = z.infer<typeof validateImageResultSchema>;
 
 export const imageResponseSchema = z.object({
-  contentType: z
-    .string({
-      required_error: "Missing 'Content-Type' header.",
-      invalid_type_error: "'Content-Type' must be a string.",
-    })
-    .refine((val) => VALID_TYPES.includes(val), {
-      message: "Invalid file type. Only JPEG and PNG images are allowed.",
-    }),
+  contentType: z.string().refine((val) => VALID_TYPES.includes(val), {
+    message: "Invalid file type. Only JPEG and PNG images are allowed.",
+  }),
   contentLength: z
-    .string({
-      required_error: "Missing 'Content-Length' header.",
-      invalid_type_error: "'Content-Length' must be a string.",
-    })
+    .string()
     .transform((val) => parseInt(val, 10))
-    .refine((val) => val <= MAX_SIZE, {
+    .refine((val) => val < MAX_SIZE, {
       message: "File size exceeds the limit of 5 MB.",
     }),
 });
