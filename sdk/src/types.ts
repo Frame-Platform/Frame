@@ -1,8 +1,32 @@
 // import z from "zod"   ???
 
-export interface getDocsSchema {
+export interface Document {
+  url: string,
+  desc?: string,
+}
+
+export interface Documents {
+  documents: Document[]
+}
+
+export interface GetDocsParameterSchema {
   limit: string,
   offset: string,
+}
+
+export interface GetDocsReturnSchema {
+  documents: Documents,
+  limit: number,
+  offset: number,
+  total: number,
+}
+
+export interface GetDocsErrorSchema {
+  error: string,
+}
+
+export interface ImagesSchema {
+
 }
 
 
