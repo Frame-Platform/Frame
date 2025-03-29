@@ -50,14 +50,13 @@ export const getDocumentByIdHandler: RouteHandler<
 
 // [todo]: move all sqs client logic to services file
 import { SQSClient } from "@aws-sdk/client-sqs";
-const REGION = "us-east-1";
 
 export const createDocumentHandler: RouteHandler<
   typeof createDocumentRoute
 > = async (c) => {
   try {
     const { images } = c.req.valid("json");
-    const sqsClient = new SQSClient({ region: REGION });
+    const sqsClient = new SQSClient({ region: process.env.AWS_REGION });
     const validatedImages = await Promise.all(images.map(validateImage));
     const sqsResults = await sendToSQS(validatedImages, sqsClient);
 

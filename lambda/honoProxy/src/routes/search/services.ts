@@ -6,9 +6,8 @@ import {
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 
 export const deleteImageFromS3 = async (key: string) => {
-  const region = "us-east-1";
   const bucketName = "temp-search-bucket";
-  const s3Client = new S3Client({ region });
+  const s3Client = new S3Client({ region: process.env.AWS_REGION });
 
   console.log(`Deleting S3 image: ${key}`);
   try {
@@ -24,7 +23,7 @@ export const deleteImageFromS3 = async (key: string) => {
 
 export const uploadImageToS3 = async (image: File) => {
   const key = image.name.trim();
-  const region = "us-east-1";
+  const region = process.env.AWS_REGION;
   const bucketName = "temp-search-bucket";
   try {
     const s3Client = new S3Client({ region });
@@ -54,9 +53,8 @@ export const invokeSearchLambda = async (message: {
   url?: string;
   desc?: string;
 }) => {
-  const region = "us-east-1";
   try {
-    const lambdaClient = new LambdaClient({ region });
+    const lambdaClient = new LambdaClient({ region: process.env.AWS_REGION });
     const command = new InvokeCommand({
       FunctionName: "searchLambda",
       InvocationType: "RequestResponse",
