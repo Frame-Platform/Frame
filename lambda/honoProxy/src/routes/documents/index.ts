@@ -13,8 +13,9 @@ export const getDocumentsRoute = createRoute({
   method: "get",
   path: "/document",
   request: {
-    query: paginationSchema,
-    description: "Retrieves a paginated list of documents",
+    query: paginationSchema.describe("Pagination query parameters"),
+    description:
+      "Retrieve a paginated list of documents. Defaults to returning all documents unless limit/offset are provided.",
   },
   responses: {
     200: {
@@ -27,6 +28,23 @@ export const getDocumentsRoute = createRoute({
             offset: z.number(),
             total: z.number(),
           }),
+          example: {
+            documents: [
+              {
+                id: 1,
+                url: "https://example.com/pic1.png",
+                desc: "First image",
+              },
+              {
+                id: 2,
+                url: "https://example.com/pic2.png",
+                desc: "Second image",
+              },
+            ],
+            limit: 2,
+            offset: 0,
+            total: 25,
+          },
         },
       },
     },
@@ -45,17 +63,25 @@ export const getDocumentByIdRoute = createRoute({
   method: "get",
   path: "/document/{id}",
   request: {
-    params: idPathSchema,
-    description: "Retrieves a specific document by ID",
+    params: idPathSchema.describe("Path parameter for document ID"),
+    description:
+      "Retrieve a document by its numeric ID. The ID must be a non-negative integer.",
   },
   responses: {
     200: {
-      description: "Successful retrieval of the document",
+      description: "The document was found and returned successfully.",
       content: {
         "application/json": {
           schema: z.object({
             document: documentReturnSchema,
           }),
+          example: {
+            document: {
+              id: 7,
+              url: "https://example.com/monkeyselfie.jpeg",
+              desc: "An image of monkey takign a selfie.",
+            },
+          },
         },
       },
     },
@@ -78,6 +104,17 @@ export const createDocumentRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({ images: z.array(documentSchema) }),
+          example: {
+            images: [
+              {
+                url: "https://example.com/image1.jpg",
+                desc: "A photo of the Colosseum in Rome",
+              },
+              {
+                desc: "An image with no URL, only a description",
+              },
+            ],
+          },
         },
       },
       description:
@@ -90,6 +127,23 @@ export const createDocumentRoute = createRoute({
       content: {
         "application/json": {
           schema: z.array(validateImageResultSchema),
+          example: [
+            {
+              url: "https://example.com/image1.jpg",
+              desc: "A photo of the Colosseum in Rome",
+              success: true,
+            },
+            {
+              desc: "An image with no URL, only a description",
+              success: true,
+            },
+            {
+              url: null,
+              desc: null,
+              success: false,
+              errors: "At least one of url or desc must be provided.",
+            },
+          ],
         },
       },
     },
@@ -108,12 +162,13 @@ export const deleteDocumentRoute = createRoute({
   method: "delete",
   path: "/delete/{id}",
   request: {
-    params: idPathSchema,
-    description: "Deletes a specific document by ID",
+    params: idPathSchema.describe("Path parameter for document ID"),
+    description:
+      "Delete a document by its numeric ID. ID must be a non-negative integer.",
   },
   responses: {
     200: {
-      description: "Successful deletion of the document",
+      description: "Document successfully deleted",
       content: {
         "application/json": {
           schema: z.object({
@@ -121,6 +176,15 @@ export const deleteDocumentRoute = createRoute({
             success: z.boolean(),
             message: z.string(),
           }),
+          example: {
+            document: {
+              id: 42,
+              url: "https://example.com/resource.pdf",
+              desc: "A sample document",
+            },
+            success: true,
+            message: "Document deleted successfully.",
+          },
         },
       },
     },
