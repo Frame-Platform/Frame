@@ -8,7 +8,7 @@ import { searchJSONSchema } from "./schema";
 import { z } from "@hono/zod-openapi";
 
 export const deleteImageFromS3 = async (key: string) => {
-  const bucketName = "temp-search-bucket";
+  const bucketName = process.env.TEMP_BUCKET;
   const s3Client = new S3Client({ region: process.env.AWS_REGION });
 
   console.log(`Deleting S3 image: ${key}`);
@@ -26,7 +26,7 @@ export const deleteImageFromS3 = async (key: string) => {
 export const uploadImageToS3 = async (image: File) => {
   const key = image.name.trim();
   const region = process.env.AWS_REGION;
-  const bucketName = "temp-search-bucket";
+  const bucketName = process.env.TEMP_BUCKET;
   try {
     const s3Client = new S3Client({ region });
 
