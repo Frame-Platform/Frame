@@ -1,5 +1,6 @@
 import { z } from "@hono/zod-openapi";
 import { VALID_TYPES, MAX_SIZE } from "../sharedSchemas";
+import { baseDocumentSchema } from "../sharedSchemas";
 
 export const idPathSchema = z.object({
   id: z
@@ -8,20 +9,12 @@ export const idPathSchema = z.object({
     .refine((data) => data && data >= 0, { message: "Invalid resource ID" }),
 });
 
-const baseDocumentSchema = z.object({
-  url: z.string().url({ message: "Invalid URL format" }).optional().nullable(),
-  desc: z.string().optional().nullable(),
-});
-export type BaseDocumentType = z.infer<typeof baseDocumentSchema>;
-
-export const createDocumentSchema = z.object({
-  images: z.array(
-    baseDocumentSchema.refine((data) => data.url || data.desc, {
-      message: "At least one of url or desc must be provided.",
-    }),
-  ),
-});
-
+export const documentSchema = baseDocumentSchema.refine(
+  (data) => data.url || data.desc,
+  {
+    message: "At least one of url or desc must be provided.",
+  },
+);
 export const documentReturnSchema = baseDocumentSchema.extend({
   id: z.number(),
 });

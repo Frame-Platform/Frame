@@ -1,7 +1,8 @@
 import { pgConnect } from "../../db";
 import { SQSClient } from "@aws-sdk/client-sqs";
 import { SendMessageBatchCommand } from "@aws-sdk/client-sqs";
-import { BaseDocumentType, ValidImageResult } from "./schema";
+import { ValidImageResult } from "./schema";
+import { BaseDocumentType } from "../sharedSchemas";
 
 export const pgGetDocuments = async (
   limit: number, // default limit is 1mil, default offset is 0 => returns all
