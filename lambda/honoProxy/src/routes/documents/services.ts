@@ -59,8 +59,6 @@ export const pgDeleteDocument = async (id: number) => {
   }
 };
 
-const QUEUE_URL =
-  "https://sqs.us-east-1.amazonaws.com/982227461113/ingestionQueue";
 export async function sendToSQS(
   images: ValidImageResult[],
   sqsClient: SQSClient,
@@ -82,7 +80,7 @@ export async function sendToSQS(
   }));
 
   const command = new SendMessageBatchCommand({
-    QueueUrl: QUEUE_URL,
+    QueueUrl: process.env.QUEUE_URL,
     Entries: entries,
   });
 

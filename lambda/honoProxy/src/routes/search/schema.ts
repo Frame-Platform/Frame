@@ -1,6 +1,5 @@
 import { z } from "@hono/zod-openapi";
 import { MAX_SIZE, VALID_TYPES } from "../sharedSchemas";
-import { Type } from "@aws-sdk/client-s3";
 
 export const searchJSONSchema = z
   .object({
