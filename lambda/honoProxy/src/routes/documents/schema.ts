@@ -37,12 +37,20 @@ export const createDocumentSchema = z.object({
   }),
 });
 
+export const deleteSchema = z.object({
+  id: z
+    .string()
+    .transform((val) => parseInt(val, 10))
+    .refine((data) => data && data > 0, { message: "Invalid ID" }),
+});
+
 export const validateImageResultSchema = z.object({
   success: z.boolean(),
   url: z.string().optional().nullable(),
   desc: z.string().optional().nullable(),
   errors: z.string().optional(),
 });
+export type ValidImageResult = z.infer<typeof validateImageResultSchema>;
 
 export const imageResponseSchema = z.object({
   contentType: z

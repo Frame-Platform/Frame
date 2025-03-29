@@ -1,7 +1,7 @@
 import { pgConnect } from "../../db";
 import { SQSClient } from "@aws-sdk/client-sqs";
 import { SendMessageBatchCommand } from "@aws-sdk/client-sqs";
-import { DocumentEntryType } from "./schema";
+import { DocumentEntryType, ValidImageResult } from "./schema";
 
 export const pgGetDocuments = async (
   limit: number, // default limit is 1mil, default offset is 0 => returns all
@@ -38,7 +38,26 @@ export const pgGetById = async (id: string | number) => {
   }
 };
 
-import { ValidImageResult } from "../../types";
+export const pgDeleteDocument = async (id: number) => {
+  try {
+    const pgClient = await pgConnect();
+    const query = `
+      DELETE FROM documents WHERE id = $1 RETURNING *;
+    `;
+    const result = await pgClient.query(query, [id]);
+    if (result.rowCount === 0) {
+      return { success: false, message: `No document found with ID ${id}` };
+    }
+
+    return {
+      success: true,
+      message: `Document with ID ${id} deleted successfully.`,
+    };
+  } catch (e) {
+    throw new Error(`Failed to delete document: ${e}`);
+  }
+};
+
 const QUEUE_URL =
   "https://sqs.us-east-1.amazonaws.com/982227461113/ingestionQueue";
 export async function sendToSQS(
@@ -74,7 +93,8 @@ export async function sendToSQS(
     throw error;
   }
 }
-import { imageResponseSchema } from "../../types";
+
+import { imageResponseSchema } from "./schema";
 export const validateImage = async ({
   url,
   desc,

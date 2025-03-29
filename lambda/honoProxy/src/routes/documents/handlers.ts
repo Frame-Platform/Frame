@@ -2,6 +2,7 @@ import { RouteHandler } from "@hono/zod-openapi";
 
 import {
   createDocumentRoute,
+  deleteDocumentRoute,
   getDocumentByIdRoute,
   getDocumentsRoute,
 } from ".";
@@ -9,6 +10,7 @@ import {
   validateImage,
   pgGetDocuments,
   pgGetById,
+  pgDeleteDocument,
   sendToSQS,
 } from "./services";
 
@@ -81,5 +83,29 @@ export const createDocumentHandler: RouteHandler<
     return c.json(messageStatuses, 200);
   } catch (e) {
     return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
+  }
+};
+
+export const deleteDocumentHandler: RouteHandler<
+  typeof deleteDocumentRoute
+> = async (c) => {
+  try {
+    const { id } = c.req.valid("param");
+
+    const { success, message } = await pgDeleteDocument(id);
+
+    const result = {
+      id,
+      success,
+      message,
+    };
+
+    return c.json(result, 200);
+  } catch (e) {
+    if (e instanceof Error) {
+      return c.json({ error: e.message }, 500);
+    } else {
+      return c.json({ error: "Internal Server Error" }, 500);
+    }
   }
 };

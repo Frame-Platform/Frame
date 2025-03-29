@@ -2,7 +2,11 @@ import { createRoute } from "@hono/zod-openapi";
 import { errorResponseSchema } from "../sharedSchemas";
 import { paginationSchema } from "./schema";
 import { z } from "@hono/zod-openapi";
-import { createDocumentSchema, validateImageResultSchema } from "./schema";
+import {
+  deleteSchema,
+  createDocumentSchema,
+  validateImageResultSchema,
+} from "./schema";
 
 export const getDocumentsRoute = createRoute({
   method: "get",
@@ -92,6 +96,45 @@ export const createDocumentRoute = createRoute({
     },
     400: {
       description: "Bad Request",
+      content: {
+        "application/json": {
+          schema: errorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const deleteDocumentRoute = createRoute({
+  method: "delete",
+  path: "/delete/{id}",
+  request: {
+    params: deleteSchema,
+    description: "Deletes a specific document by ID",
+  },
+  responses: {
+    200: {
+      description: "Successful deletion of the document",
+      content: {
+        "application/json": {
+          schema: z.object({
+            id: z.number(),
+            success: z.boolean(),
+            message: z.string(),
+          }),
+        },
+      },
+    },
+    400: {
+      description: "Bad Request",
+      content: {
+        "application/json": {
+          schema: errorResponseSchema,
+        },
+      },
+    },
+    500: {
+      description: "Server Error",
       content: {
         "application/json": {
           schema: errorResponseSchema,
