@@ -2,6 +2,7 @@ import { createRoute } from "@hono/zod-openapi";
 import { errorResponseSchema } from "../sharedSchemas";
 import { paginationSchema } from "./schema";
 import { z } from "@hono/zod-openapi";
+import { createDocumentSchema, validateImageResultSchema } from "./schema";
 
 export const getDocumentsRoute = createRoute({
   method: "get",
@@ -52,6 +53,40 @@ export const getDocumentByIdRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({}),
+        },
+      },
+    },
+    400: {
+      description: "Bad Request",
+      content: {
+        "application/json": {
+          schema: errorResponseSchema,
+        },
+      },
+    },
+  },
+});
+
+export const createDocumentRoute = createRoute({
+  method: "post",
+  path: "/document",
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: createDocumentSchema,
+        },
+      },
+      description:
+        "Receives images via URL and optional descriptions and queues them for embedding.",
+    },
+  },
+  responses: {
+    200: {
+      description: "Validation results of images.",
+      content: {
+        "application/json": {
+          schema: z.array(validateImageResultSchema),
         },
       },
     },

@@ -13,8 +13,13 @@ import {
 import { sendToSQS } from "./utils";
 import { searchRoute } from "./routes/search";
 import { searchHandler } from "./routes/search/handler";
-import { getDocumentByIdRoute, getDocumentsRoute } from "./routes/documents";
 import {
+  createDocumentRoute,
+  getDocumentByIdRoute,
+  getDocumentsRoute,
+} from "./routes/documents";
+import {
+  createDocumentHandler,
   getDocumentByIdHandler,
   getDocumentsHandler,
 } from "./routes/documents/handlers";
@@ -26,73 +31,7 @@ app.use(cors({ origin: "*" }));
 
 app.openapi(getDocumentsRoute, getDocumentsHandler);
 app.openapi(getDocumentByIdRoute, getDocumentByIdHandler);
-
-app.openapi(
-  createRoute({
-    method: "post",
-    path: "/document",
-    request: {
-      body: {
-        content: {
-          "application/json": {
-            schema: createDocumentSchema,
-          },
-        },
-        description:
-          "Receives images via URL and optional descriptions and queues them for embedding.",
-      },
-    },
-    responses: {
-      200: {
-        description: "Validation results of images.",
-        content: {
-          "application/json": {
-            schema: z.array(validateImageResultSchema),
-          },
-        },
-      },
-      400: {
-        description: "Bad Request",
-        content: {
-          "application/json": {
-            schema: errorResponseSchema,
-          },
-        },
-      },
-    },
-  }),
-  async (c) => {
-    try {
-      const { images } = c.req.valid("json");
-      const sqsClient = new SQSClient({ region: REGION });
-      const validatedImages = await Promise.all(images.map(validateImage));
-      const sqsResults = await sendToSQS(validatedImages, sqsClient);
-
-      const successfulMessages = sqsResults.Successful || [];
-      const failedMessages = sqsResults.Failed || [];
-
-      const messageStatuses = validatedImages.map((image, index) => {
-        const successEntry = successfulMessages.find(
-          (msg) => msg.Id === index.toString(),
-        );
-        const failedEntry = failedMessages.find(
-          (msg) => msg.Id === index.toString(),
-        );
-
-        return {
-          url: image.url,
-          desc: image.desc,
-          success: !!successEntry,
-          errors: failedEntry ? failedEntry.Message || "Unknown Error" : "",
-        };
-      });
-
-      return c.json(messageStatuses, 200);
-    } catch (e) {
-      return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
-    }
-  },
-);
+app.openapi(createDocumentRoute, createDocumentHandler);
 
 // Middleware for parsing multipart form data before zod validation.
 app.use("/search", async (c, next) => {
@@ -102,7 +41,6 @@ app.use("/search", async (c, next) => {
   }
   return await next();
 });
-
 app.openapi(searchRoute, searchHandler);
 
 app.openapi(
