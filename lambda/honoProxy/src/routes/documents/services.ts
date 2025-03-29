@@ -5,7 +5,7 @@ import { BaseDocumentType, ValidImageResult } from "./schema";
 
 export const pgGetDocuments = async (
   limit: number, // default limit is 1mil, default offset is 0 => returns all
-  offset: number,
+  offset: number
 ) => {
   try {
     const pgClient = await pgConnect();
@@ -30,11 +30,9 @@ export const pgGetById = async (id: string | number) => {
     `;
 
     const { rows } = await pgClient.query(query, [id]);
-
-    await pgClient.end();
     return rows;
   } catch (e) {
-    throw new Error(`Error getting document by id`);
+    throw new Error(`Error getting document by id: ${e}`);
   }
 };
 
@@ -63,7 +61,7 @@ const QUEUE_URL =
   "https://sqs.us-east-1.amazonaws.com/982227461113/ingestionQueue";
 export async function sendToSQS(
   images: ValidImageResult[],
-  sqsClient: SQSClient,
+  sqsClient: SQSClient
 ) {
   // Filter out invalid images to avoid sending bad requests
   const validImages = images.filter((image) => image.success);
