@@ -42,7 +42,7 @@ export const getDocumentByIdHandler: RouteHandler<
     const { id } = c.req.valid("param");
     const document = await pgGetById(id);
 
-    return c.json({ document }, 200);
+    return c.json({ document: document[0] }, 200);
   } catch (e) {
     return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
   }
@@ -92,15 +92,9 @@ export const deleteDocumentHandler: RouteHandler<
   try {
     const { id } = c.req.valid("param");
 
-    const { success, message } = await pgDeleteDocument(id);
+    const { success, message, document } = await pgDeleteDocument(id);
 
-    const result = {
-      id,
-      success,
-      message,
-    };
-
-    return c.json(result, 200);
+    return c.json({ document, success, message }, 200);
   } catch (e) {
     if (e instanceof Error) {
       return c.json({ error: e.message }, 500);

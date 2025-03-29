@@ -1,20 +1,19 @@
 import { createRoute } from "@hono/zod-openapi";
 import { errorResponseSchema } from "../sharedSchemas";
-import { paginationSchema } from "./schema";
 import { z } from "@hono/zod-openapi";
 import {
-  deleteSchema,
+  idPathSchema,
+  paginationSchema,
   createDocumentSchema,
   validateImageResultSchema,
+  documentReturnSchema,
 } from "./schema";
 
 export const getDocumentsRoute = createRoute({
   method: "get",
   path: "/document",
   request: {
-    query: paginationSchema.openapi({
-      example: { limit: "1", offset: "10" },
-    }),
+    query: paginationSchema,
     description: "Retrieves a paginated list of documents",
   },
   responses: {
@@ -23,7 +22,7 @@ export const getDocumentsRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            documents: z.array(z.object({})),
+            documents: z.array(documentReturnSchema),
             limit: z.number(),
             offset: z.number(),
             total: z.number(),
@@ -44,11 +43,9 @@ export const getDocumentsRoute = createRoute({
 
 export const getDocumentByIdRoute = createRoute({
   method: "get",
-  path: "/document/:id",
+  path: "/document/{id}",
   request: {
-    params: z.object({
-      id: z.string().openapi({ param: { name: "id", in: "path" } }),
-    }),
+    params: idPathSchema,
     description: "Retrieves a specific document by ID",
   },
   responses: {
@@ -56,7 +53,9 @@ export const getDocumentByIdRoute = createRoute({
       description: "Successful retrieval of the document",
       content: {
         "application/json": {
-          schema: z.object({}),
+          schema: z.object({
+            document: documentReturnSchema,
+          }),
         },
       },
     },
@@ -109,7 +108,7 @@ export const deleteDocumentRoute = createRoute({
   method: "delete",
   path: "/delete/{id}",
   request: {
-    params: deleteSchema,
+    params: idPathSchema,
     description: "Deletes a specific document by ID",
   },
   responses: {
@@ -118,7 +117,7 @@ export const deleteDocumentRoute = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            id: z.number(),
+            document: documentReturnSchema,
             success: z.boolean(),
             message: z.string(),
           }),

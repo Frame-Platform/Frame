@@ -1,6 +1,31 @@
 import { z } from "@hono/zod-openapi";
 import { VALID_TYPES, MAX_SIZE } from "../sharedSchemas";
 
+export const idPathSchema = z.object({
+  id: z
+    .string()
+    .transform((val) => parseInt(val, 10))
+    .refine((data) => data && data >= 0, { message: "Invalid resource ID" }),
+});
+
+const baseDocumentSchema = z.object({
+  url: z.string().url({ message: "Invalid URL format" }).optional().nullable(),
+  desc: z.string().optional().nullable(),
+});
+export type BaseDocumentType = z.infer<typeof baseDocumentSchema>;
+
+export const createDocumentSchema = z.object({
+  images: z.array(
+    baseDocumentSchema.refine((data) => data.url || data.desc, {
+      message: "At least one of url or desc must be provided.",
+    }),
+  ),
+});
+
+export const documentReturnSchema = baseDocumentSchema.extend({
+  id: z.number(),
+});
+
 export const paginationSchema = z.object({
   limit: z
     .string()
@@ -12,44 +37,11 @@ export const paginationSchema = z.object({
     .transform((val) => (val ? parseInt(val, 10) : 0)),
 });
 
-const documentEntrySchema = z
-  .object({
-    url: z
-      .string()
-      .url({ message: "Invalid URL format" })
-      .optional()
-      .nullable(),
-    desc: z.string().optional().nullable(),
-  })
-  .refine((data) => data.url || data.desc, {
-    message: "At least one of url or desc must be provided.",
-  });
-export type DocumentEntryType = z.infer<typeof documentEntrySchema>;
-
-export const createDocumentSchema = z.object({
-  images: z.array(documentEntrySchema).openapi({
-    example: [
-      {
-        url: "https://example.com/image.png",
-        desc: "Optional description",
-      },
-    ],
-  }),
-});
-
-export const deleteSchema = z.object({
-  id: z
-    .string()
-    .transform((val) => parseInt(val, 10))
-    .refine((data) => data && data > 0, { message: "Invalid ID" }),
-});
-
-export const validateImageResultSchema = z.object({
+export const validateImageResultSchema = baseDocumentSchema.extend({
   success: z.boolean(),
-  url: z.string().optional().nullable(),
-  desc: z.string().optional().nullable(),
   errors: z.string().optional(),
 });
+
 export type ValidImageResult = z.infer<typeof validateImageResultSchema>;
 
 export const imageResponseSchema = z.object({
