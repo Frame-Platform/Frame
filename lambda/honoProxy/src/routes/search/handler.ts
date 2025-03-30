@@ -40,12 +40,9 @@ export const searchHandler: RouteHandler<typeof searchRoute> = async (c) => {
     const documents = await invokeSearchLambda(message);
 
     return c.json({ hits: documents, count: documents.length }, 200);
-  } catch (error) {
-    if (error instanceof Error) {
-      return c.json({ error: error.message }, 500);
-    } else {
-      return c.json({ error: "Internal Server Error" }, 500);
-    }
+  } catch (e) {
+    console.log(`Error in searchHandler ${e}`);
+    return c.json({ error: "Internal Server Error" }, 500);
   } finally {
     if (imageKey) {
       await deleteImageFromS3(imageKey);

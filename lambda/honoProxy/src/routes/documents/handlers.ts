@@ -28,10 +28,11 @@ export const getDocumentsHandler: RouteHandler<
         offset,
         total: documents.length,
       },
-      200
+      200,
     );
   } catch (e) {
-    return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
+    console.log(`Error in getDocumentsHandler: ${e}`);
+    return c.json({ error: "Internal server error." }, 500);
   }
 };
 
@@ -40,15 +41,19 @@ export const getDocumentByIdHandler: RouteHandler<
 > = async (c) => {
   try {
     const { id } = c.req.valid("param");
-    const document = await pgGetById(id);
+    const queryResults = await pgGetById(id);
+    const document = queryResults.rows[0];
 
-    return c.json({ document: document[0] }, 200);
+    if (!document) {
+      return c.json({ error: `Document ${id} not found` }, 404);
+    }
+
+    return c.json({ document }, 200);
   } catch (e) {
-    return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
+    console.log(`Error in getDocumentsByIdHandler: ${e}`);
+    return c.json({ error: "Internal server error." }, 500);
   }
 };
-
-// [todo]: move all sqs client logic to services file
 
 export const createDocumentHandler: RouteHandler<
   typeof createDocumentRoute
@@ -64,10 +69,10 @@ export const createDocumentHandler: RouteHandler<
 
     const messageStatuses = validatedImages.map((image, index) => {
       const successEntry = successfulMessages.find(
-        (msg) => msg.Id === index.toString()
+        (msg) => msg.Id === index.toString(),
       );
       const failedEntry = failedMessages.find(
-        (msg) => msg.Id === index.toString()
+        (msg) => msg.Id === index.toString(),
       );
 
       return {
@@ -80,7 +85,8 @@ export const createDocumentHandler: RouteHandler<
 
     return c.json(messageStatuses, 200);
   } catch (e) {
-    return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
+    console.log(`Error in createDocumentHandler: ${e}`);
+    return c.json({ error: "Internal server error." }, 500);
   }
 };
 
@@ -90,14 +96,15 @@ export const deleteDocumentHandler: RouteHandler<
   try {
     const { id } = c.req.valid("param");
 
-    const { success, message, document } = await pgDeleteDocument(id);
+    const queryResult = await pgDeleteDocument(id);
 
-    return c.json({ document, success, message }, 200);
-  } catch (e) {
-    if (e instanceof Error) {
-      return c.json({ error: e.message }, 500);
-    } else {
-      return c.json({ error: "Internal Server Error" }, 500);
+    if (queryResult.rowCount === 0) {
+      return c.json({ error: "Document not found" }, 404);
     }
+
+    return c.json({ document: queryResult.rows[0] }, 200);
+  } catch (e) {
+    console.log(`Error in deleteDocumentHandler: ${e}`);
+    return c.json({ error: "Internal server error." }, 500);
   }
 };
