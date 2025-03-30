@@ -48,8 +48,8 @@ export const getDocumentsRoute = createRoute({
         },
       },
     },
-    400: {
-      description: "Bad Request",
+    500: {
+      description: "Server Error",
       content: {
         "application/json": {
           schema: errorResponseSchema,
@@ -85,16 +85,16 @@ export const getDocumentByIdRoute = createRoute({
         },
       },
     },
-    400: {
-      description: "Bad Request",
+    404: {
+      description: "Document not found",
       content: {
         "application/json": {
           schema: errorResponseSchema,
         },
       },
     },
-    404: {
-      description: "Document not found",
+    500: {
+      description: "Bad Request",
       content: {
         "application/json": {
           schema: errorResponseSchema,
@@ -155,8 +155,8 @@ export const createDocumentRoute = createRoute({
         },
       },
     },
-    400: {
-      description: "Bad Request",
+    500: {
+      description: "Server Error",
       content: {
         "application/json": {
           schema: errorResponseSchema,
@@ -181,8 +181,6 @@ export const deleteDocumentRoute = createRoute({
         "application/json": {
           schema: z.object({
             document: documentReturnSchema,
-            success: z.boolean(),
-            message: z.string(),
           }),
           example: {
             document: {
@@ -190,14 +188,12 @@ export const deleteDocumentRoute = createRoute({
               url: "https://example.com/resource.pdf",
               desc: "A sample document",
             },
-            success: true,
-            message: "Document deleted successfully.",
           },
         },
       },
     },
-    400: {
-      description: "Bad Request",
+    404: {
+      description: "Document not found",
       content: {
         "application/json": {
           schema: errorResponseSchema,

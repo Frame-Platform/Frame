@@ -42,18 +42,10 @@ export const pgDeleteDocument = async (id: number) => {
     const query = `
       DELETE FROM documents WHERE id = $1 RETURNING id, url, desc;
     `;
-    const result = await pgClient.query(query, [id]);
-    if (result.rowCount === 0) {
-      return { success: false, message: `No document found with ID ${id}` };
-    }
 
-    return {
-      document: result.rows[0],
-      success: true,
-      message: `Document with ID ${id} deleted successfully.`,
-    };
+    return await pgClient.query(query, [id]);
   } catch (e) {
-    throw new Error(`Failed to delete document: ${e}`);
+    throw new Error(`Error occured in pgDeleteDocument: ${e}`);
   }
 };
 

@@ -36,14 +36,6 @@ export const searchRoute = createRoute({
         },
       },
     },
-    400: {
-      description: "Bad Request",
-      content: {
-        "application/json": {
-          schema: errorResponseSchema,
-        },
-      },
-    },
     500: {
       description: "Server Error",
       content: {
