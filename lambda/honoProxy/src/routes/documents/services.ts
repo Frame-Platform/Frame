@@ -58,39 +58,82 @@ export const pgDeleteDocument = async (id: number) => {
   }
 };
 
-
 export async function sendToSQS(images: ValidImageResult[]) {
   const sqsClient = new SQSClient({ region: process.env.AWS_REGION });
-  // Filter out invalid images to avoid sending bad requests
-
   const validImages = images.filter((image) => image.success);
 
   if (validImages.length === 0) {
     return { Failed: [], Successful: [] };
   }
 
-  const entries = validImages.map((image, index) => ({
-    Id: index.toString(), // Unique identifier per batch message
-    MessageBody: JSON.stringify({
-      url: image.url,
-      desc: image.desc || null,
-      timestamp: new Date().toISOString(),
-    }),
-  }));
+  const chunkSize = 10;
+  const successfulMessages: any[] = [];
+  const failedMessages: any[] = [];
 
-  const command = new SendMessageBatchCommand({
-    QueueUrl: process.env.QUEUE_URL,
-    Entries: entries,
-  });
+  for (let i = 0; i < validImages.length; i += chunkSize) {
+    const batch = validImages.slice(i, i + chunkSize);
+    const entries = batch.map((image, index) => ({
+      Id: (i + index).toString(),
+      MessageBody: JSON.stringify({
+        url: image.url,
+        desc: image.desc || null,
+        timestamp: new Date().toISOString(),
+      }),
+    }));
 
-  try {
-    const response = await sqsClient.send(command);
-    return response; // Contains Successful and Failed fields
-  } catch (error) {
-    console.error("Error sending batch to SQS:", error);
-    throw error;
+    const command = new SendMessageBatchCommand({
+      QueueUrl: process.env.QUEUE_URL,
+      Entries: entries,
+    });
+
+    try {
+      const response = await sqsClient.send(command);
+      successfulMessages.push(...(response.Successful || []));
+      failedMessages.push(...(response.Failed || []));
+    } catch (error) {
+      console.error("Error sending batch to SQS:", error);
+      failedMessages.push(
+        ...entries.map((entry) => ({
+          Id: entry.Id,
+          Message: error instanceof Error ? error.message : "Unknown error",
+        }))
+      );
+    }
   }
+
+  return { Successful: successfulMessages, Failed: failedMessages };
 }
+
+// export async function sendToSQS(images: ValidImageResult[]) {
+//   const sqsClient = new SQSClient({ region: process.env.AWS_REGION });
+//   const validImages = images.filter((image) => image.success);
+
+//   if (validImages.length === 0) {
+//     return { Failed: [], Successful: [] };
+//   }
+
+//   const entries = validImages.map((image, index) => ({
+//     Id: index.toString(), // Unique identifier per batch message
+//     MessageBody: JSON.stringify({
+//       url: image.url,
+//       desc: image.desc || null,
+//       timestamp: new Date().toISOString(),
+//     }),
+//   }));
+
+//   const command = new SendMessageBatchCommand({
+//     QueueUrl: process.env.QUEUE_URL,
+//     Entries: entries,
+//   });
+
+//   try {
+//     const response = await sqsClient.send(command);
+//     return response; // Contains Successful and Failed fields
+//   } catch (error) {
+//     console.error("Error sending batch to SQS:", error);
+//     throw error;
+//   }
+// }
 
 export const validateImage = async ({ url, desc }: BaseDocumentType) => {
   try {

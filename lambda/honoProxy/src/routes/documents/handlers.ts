@@ -28,7 +28,7 @@ export const getDocumentsHandler: RouteHandler<
         offset,
         total: documents.length,
       },
-      200,
+      200
     );
   } catch (e) {
     return c.json({ error: e instanceof Error ? e.message : String(e) }, 400);
@@ -64,10 +64,10 @@ export const createDocumentHandler: RouteHandler<
 
     const messageStatuses = validatedImages.map((image, index) => {
       const successEntry = successfulMessages.find(
-        (msg) => msg.Id === index.toString(),
+        (msg) => msg.Id === index.toString()
       );
       const failedEntry = failedMessages.find(
-        (msg) => msg.Id === index.toString(),
+        (msg) => msg.Id === index.toString()
       );
 
       return {
