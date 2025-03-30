@@ -93,6 +93,14 @@ export const getDocumentByIdRoute = createRoute({
         },
       },
     },
+    404: {
+      description: "Document not found",
+      content: {
+        "application/json": {
+          schema: errorResponseSchema,
+        },
+      },
+    },
   },
 });
 

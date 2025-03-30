@@ -6,7 +6,7 @@ import { BaseDocumentType } from "../sharedSchemas";
 
 export const pgGetDocuments = async (
   limit: number, // default limit is 1mil, default offset is 0 => returns all
-  offset: number
+  offset: number,
 ) => {
   try {
     const pgClient = await pgConnect();
@@ -30,8 +30,7 @@ export const pgGetById = async (id: string | number) => {
              SELECT id, url, description FROM documents WHERE id = $1
     `;
 
-    const { rows } = await pgClient.query(query, [id]);
-    return rows;
+    return await pgClient.query(query, [id]);
   } catch (e) {
     throw new Error(`Error getting document by id: ${e}`);
   }
@@ -96,7 +95,7 @@ export async function sendToSQS(images: ValidImageResult[]) {
         ...entries.map((entry) => ({
           Id: entry.Id,
           Message: error instanceof Error ? error.message : "Unknown error",
-        }))
+        })),
       );
     }
   }
