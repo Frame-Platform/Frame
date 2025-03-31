@@ -56,6 +56,7 @@ export class ApiStack extends cdk.Stack {
             stage: this.api.deploymentStage,
           },
         ],
+        /*
         // Allows a quota of 10,000 requests per month
         quota: {
           limit: 10000,
@@ -66,6 +67,7 @@ export class ApiStack extends cdk.Stack {
         throttle: {
           rateLimit: 10,
         },
+        */
       }
     );
 

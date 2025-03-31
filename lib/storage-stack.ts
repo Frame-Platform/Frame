@@ -4,6 +4,7 @@ import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as iam from "aws-cdk-lib/aws-iam";
+import * as kms from "aws-cdk-lib/aws-kms";
 import { Construct } from "constructs";
 import * as dotenv from "dotenv";
 
@@ -88,6 +89,7 @@ export class StorageStack extends cdk.Stack {
       }
     );
 
+    /*
     // Create a parameter group for RDS
     const parameterGroup = new rds.ParameterGroup(
       this,
@@ -106,16 +108,22 @@ export class StorageStack extends cdk.Stack {
         },
       }
     );
+    */
+
+    // Create a KMS key for RDS encryption
+    const rdsEncryptionKey = new kms.Key(this, "RdsEncryptionKey", {
+      description: "KMS key for RDS database encryption",
+    });
 
     // Create RDS instance
     this.database = new rds.DatabaseInstance(this, "VectorDatabase", {
       engine: rds.DatabaseInstanceEngine.postgres({
         version: rds.PostgresEngineVersion.VER_17,
       }),
-      // Use t3.micro for low cost - $9.5 per month
+      // Use t4g.small for low cost - $23.36 per month
       instanceType: ec2.InstanceType.of(
-        ec2.InstanceClass.T3,
-        ec2.InstanceSize.MICRO
+        ec2.InstanceClass.T4G,
+        ec2.InstanceSize.SMALL
       ),
       // Place in the VPC we created
       vpc: this.vpc,
@@ -131,7 +139,6 @@ export class StorageStack extends cdk.Stack {
         password: cdk.SecretValue.unsafePlainText(dbPassword),
       }),
       // Database configuration
-      parameterGroup: parameterGroup,
       securityGroups: [dbSecurityGroup],
       // Deletion protection enabled for development i.e. database can be deleted when redeployed
       // NOTE: This should be changed to true when moving to production, so database is not deleted on redeployment
@@ -140,6 +147,19 @@ export class StorageStack extends cdk.Stack {
       // but the RDS instance is being placed in a public subnet to enable Lambda access
       removalPolicy: cdk.RemovalPolicy.DESTROY, // For easier cleanup
       publiclyAccessible: true,
+      // Enable storage encryption with KMS key
+      storageEncrypted: true,
+      storageEncryptionKey: rdsEncryptionKey,
+      allocatedStorage: 20, // Starting storage in GB
+      maxAllocatedStorage: 1000, // Maximum storage in GB for auto scaling
+      // Enable Performance Insights
+      enablePerformanceInsights: true,
+      performanceInsightRetention: rds.PerformanceInsightRetention.DEFAULT,
+    });
+
+    // Create KMS key for S3 bucket encryption
+    const bucketEncryptionKey = new kms.Key(this, "ImageBucketKey", {
+      description: "KMS key for image bucket encryption",
     });
 
     // Create S3 bucket for image storage
@@ -152,6 +172,7 @@ export class StorageStack extends cdk.Stack {
         ignorePublicAcls: false,
         restrictPublicBuckets: false,
       }), // Allow public access
+      /*
       cors: [
         {
           allowedMethods: [
@@ -164,9 +185,13 @@ export class StorageStack extends cdk.Stack {
           allowedHeaders: ["*"],
         },
       ],
+      */
+      // Add encryption configuration
+      encryption: s3.BucketEncryption.KMS,
+      encryptionKey: bucketEncryptionKey,
+      bucketKeyEnabled: true, // This enables S3 Bucket Keys
     });
 
-    // CONTINUE FROM HERE
     // Add policy directly to the bucket using addToResourcePolicy
     this.imageBucket.addToResourcePolicy(
       new iam.PolicyStatement({
@@ -180,6 +205,7 @@ export class StorageStack extends cdk.Stack {
         ],
       })
     );
+
     /*
     // Add a bucket policy for public read access
     const bucketPolicy = new s3.BucketPolicy(this, 'ImageBucketPolicy', {

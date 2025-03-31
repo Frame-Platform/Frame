@@ -17,7 +17,7 @@ The API Gateway is configured with the following settings:
 
 | Setting        | Value   | Description                                                                                            |
 | -------------- | ------- | ------------------------------------------------------------------------------------------------------ |
-| Stage          | prod    | Production stage for the API                                                             |
+| Stage          | prod    | Production stage for the API                                                                           |
 | CORS           | Enabled | Cross-Origin Resource Sharing for browser access - Allows requests from any domain via any HTTP method |
 | Authentication | API Key | API key required for all requests                                                                      |
 
@@ -42,10 +42,3 @@ echo "Your API Key: $API_KEY"
 ### Using the API Key
 
 When making requests to the API, include the API key in the `x-api-key` header.
-
-## Usage Plan Limits
-
-The API has the following usage limits:
-
-- Monthly quota: 10,000 requests per month
-- Rate limit: 10 requests per second

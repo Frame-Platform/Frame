@@ -8,7 +8,7 @@ The Storage Stack creates the following AWS resources:
 
 - VPC with public subnet (for easy Lambda accessibility)
 - RDS PostgreSQL 17 database
-- Database parameter group optimized for vector operations
+- Default database parameter group
 - Secrets Manager secret for database credentials
 - Security group for database access (allowing access from any IP)
 - S3 bucket for storing image files uploaded through the API
@@ -20,7 +20,6 @@ The S3 bucket is configured with the following settings:
 | Setting         | Value    | Description                                |
 | --------------- | -------- | ------------------------------------------ |
 | Public Access   | Enabled  | Allows public read access to stored images |
-| CORS            | Enabled  | Allows cross-origin requests               |
 | Versioning      | Disabled | Object versioning is not enabled           |
 | Lifecycle Rules | None     | No automatic deletion rules configured     |
 
@@ -70,13 +69,14 @@ The database is configured with the following settings:
 
 | Setting              | Value                                           | Description                                           |
 | -------------------- | ----------------------------------------------- | ----------------------------------------------------- |
-| Instance Type        | t3.micro                                        | Low cost                                              |
+| Instance Type        | t4g.small                                       | Low cost                                              |
 | Deletion Protection  | Disabled in development / Enabled in production | Prevents accidental deletion                          |
 | VPC Placement        | Public Subnet                                   | **TEMPORARY**: Should be private subnet in production |
 | Public Accessibility | Enabled                                         | **TEMPORARY**: Should be disabled in production       |
 | Security Group       | Open access (port 5432)                         | **TEMPORARY**: Should be restricted in production     |
+| Auto-scaling         | Up to 1000GB                                    |                                                       |
 
-### Configuration
+### Configuration [NB: THIS IS NO LONGER THE CASE]
 
 The PostgreSQL instance is configured with optimized parameters:
 
@@ -133,7 +133,7 @@ async function getDatabaseCredentials(secretArn) {
 
 ## Cost Considerations
 
-The t3.micro instance costs approximately $10 per month
+The t4g.small instance costs approximately $24 per month
 AWS Secrets Manager costs approximately $0.40 per secret per month
 ⚠️ Note: Auto-scaling storage will increase costs as your database grows
 

@@ -25,13 +25,13 @@ This Lambda function acts as the entry point for all HTTP requests and routes th
 
 Configuration:
 
-- Memory: 1024MB
+- Memory: 1769MB
 - Timeout: 30 seconds
 - Permissions:
-  - SQS message sending (for Image Ingestion SQS)
+  - SQS full access - for message sending (for Image Ingestion SQS)
+  - S3 full access - to put object, get object and delete object from S3 bucket
   - Lambda invocation (for direct invocations of Search Lambda)
   - Get Secret Value from Secrets Manager (for database access)
-  - Put object, get object and delete object from S3 bucket
 
 ### Image Ingestion Lambda
 
@@ -43,8 +43,8 @@ This Lambda function processes documents asynchronously:
 
 Configuration:
 
-- Memory: 1024MB
-- Timeout: 15 minutes (maximum time)
+- Memory: 1769MB
+- Timeout: 30 seconds (maximum time)
 - SQS Message Batch Size: 1 message
 - Triggers:
   - SQS trigger for batch processing
@@ -63,7 +63,7 @@ This Lambda function handles search requests:
 
 Configuration:
 
-- Memory: 1024MB
+- Memory: 1769MB
 - Timeout: 30 seconds
 - Triggers:
   - API Lambda (Hono)
@@ -84,6 +84,7 @@ Each Lambda function uses specific environment variables:
 | SEARCH_LAMBDA_ARN   | ARN of the Search Lambda                              | API Lambda                      |
 | IMAGE_BUCKET_NAME   | Name of the S3 bucket                                 | API Lambda                      |
 | BEDROCK_MODEL_ID    | ID of the embedding model                             | Image Ingestion, Search Lambdas |
+| DATABASE_NAME       | Name of the database                                  | All Lambdas                     |
 
 ## IAM Permissions
 
