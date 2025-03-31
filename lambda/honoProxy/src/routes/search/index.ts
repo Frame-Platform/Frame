@@ -4,7 +4,13 @@ import {
   searchMultipartSchema,
   searchResultSchema,
 } from "./schema";
-import { apiKeySchema, errorResponseSchema } from "../sharedSchemas";
+import {
+  apiKeySchema,
+  errorResponseSchema,
+  VALID_IMAGE_TYPES,
+  MAX_IMAGE_SIZE,
+} from "../sharedSchemas";
+
 import { z } from "@hono/zod-openapi";
 
 export const searchRoute = createRoute({
@@ -18,14 +24,35 @@ export const searchRoute = createRoute({
     body: {
       content: {
         "application/json": {
-          schema: searchJSONSchema,
+          schema: searchJSONSchema.openapi({
+            example: {
+              url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+              description: "An image of a monkey taking a selfie.",
+              threshold: 0.75,
+              topK: 12,
+            },
+          }),
         },
         "multipart/form-data": {
           schema: searchMultipartSchema,
         },
       },
       description:
-        "This route performs a search using a document that can include a URL, a description, or both. The JSON body must have at least one of these fields. It also accepts two optional parameters: threshold (0.0 to 1.0, default 0) and topK (default 10) to fine-tune the search. ",
+        "Search the database using an image, a description, or both, with optional parameters to fine-tune the results.\n\n" +
+        "For JSON requests:\n" +
+        "- The request body must include either a `url` pointing to an image, a `description` string, or both.\n" +
+        "- If both are provided, each will be encoded and compared independently using cosine similarity.\n\n" +
+        "For multipart/form-data requests:\n" +
+        "- You must provide either an uploaded image file (`image`) or a `description` or both.\n" +
+        "- Accepted image types: " +
+        VALID_IMAGE_TYPES.join(", ") +
+        ".\n" +
+        "- Image URLs and uploaded files must be smaller than " +
+        (MAX_IMAGE_SIZE / (1024 * 1024)).toFixed(2) +
+        " MB.\n\n" +
+        "Optional parameters:\n" +
+        "- `threshold` (number between 0.0 and 1.0, default: 0): Filters out results below this cosine similarity threshold.\n" +
+        "- `topK` (default: 10): Limits the number of top results returned.",
     },
   },
   responses: {

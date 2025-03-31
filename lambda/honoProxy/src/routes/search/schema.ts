@@ -7,17 +7,24 @@ import {
 import { baseDocumentSchema } from "../sharedSchemas";
 
 const searchSchema = z.object({
-  threshold: z
+  threshold: z.coerce
     .number()
     .min(0, "Threshold must be at least 0")
     .max(1, "Threshold must be at most 1")
-    .default(0),
-  topK: z
+    .default(0)
+    .openapi({
+      description:
+        "Cosine similarity threshold (between 0 and 1). Results with a similarity below this value will be excluded.",
+    }),
+  topK: z.coerce
     .number()
     .max(MAX_PAGINATION_LIMIT, {
       message: `topK must not exceed ${MAX_PAGINATION_LIMIT}`,
     })
-    .default(10),
+    .default(10)
+    .openapi({
+      description: `The maximum number of top results to return. Must not exceed ${MAX_PAGINATION_LIMIT}.`,
+    }),
 });
 
 export const searchJSONSchema = baseDocumentSchema
@@ -36,7 +43,7 @@ export const searchMultipartSchema = z
         return file;
       },
       z
-        .any()
+        .instanceof(File)
         .optional()
         .refine(
           (file) => {
@@ -59,7 +66,10 @@ export const searchMultipartSchema = z
           },
         ),
     ),
-    description: z.string().optional(),
+    description: z
+      .string()
+      .optional()
+      .openapi({ description: `An optional description or query.` }),
   })
   .extend({ ...searchSchema.shape })
   .refine((data) => data.image || data.description, {

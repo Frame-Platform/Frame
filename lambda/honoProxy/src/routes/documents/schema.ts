@@ -21,6 +21,7 @@ export const documentSchema = baseDocumentSchema.refine(
     message: "At least one of url or description must be provided.",
   },
 );
+
 export const documentReturnSchema = baseDocumentSchema.extend({
   id: z.number(),
 });
