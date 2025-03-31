@@ -29,7 +29,7 @@ export const execCommand = async (
     if (program === "cdk") {
       options.cwd = path.resolve(__dirname, "../../../");
       //options.cwd = path.resolve(process.cwd(), "../../"); // NOTE: Path changed from ../
-      console.log(chalk.dim(`Running CDK command in: ${options.cwd}`));
+      // console.log(chalk.dim(`Running CDK command in: ${options.cwd}`));
     }
 
     // Spawn the process with the options
