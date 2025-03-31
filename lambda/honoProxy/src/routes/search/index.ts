@@ -10,6 +10,7 @@ import { z } from "@hono/zod-openapi";
 export const searchRoute = createRoute({
   method: "post",
   path: "/search",
+  description: "Search for documents using an image or description",
   request: {
     body: {
       content: {

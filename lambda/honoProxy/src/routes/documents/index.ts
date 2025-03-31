@@ -12,6 +12,7 @@ import {
 export const getDocumentsRoute = createRoute({
   method: "get",
   path: "/document",
+  description: "Get a paginated list of documents",
   request: {
     query: paginationSchema.describe("Pagination query parameters"),
     description:
@@ -62,6 +63,7 @@ export const getDocumentsRoute = createRoute({
 export const getDocumentByIdRoute = createRoute({
   method: "get",
   path: "/document/{id}",
+  description: "Find a document by an ID",
   request: {
     params: idPathSchema.describe("Path parameter for document ID"),
     description:
@@ -107,6 +109,7 @@ export const getDocumentByIdRoute = createRoute({
 export const createDocumentRoute = createRoute({
   method: "post",
   path: "/document",
+  description: "Add new document(s)",
   request: {
     body: {
       content: {
@@ -169,6 +172,7 @@ export const createDocumentRoute = createRoute({
 export const deleteDocumentRoute = createRoute({
   method: "delete",
   path: "/document/{id}",
+  description: "Deleteing a document",
   request: {
     params: idPathSchema.describe("Path parameter for document ID"),
     description:
