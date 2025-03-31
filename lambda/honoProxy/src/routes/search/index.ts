@@ -9,9 +9,11 @@ import {
   errorResponseSchema,
   VALID_IMAGE_TYPES,
   MAX_IMAGE_SIZE,
+  zodErrorResponseSchema,
 } from "../sharedSchemas";
 
 import { z } from "@hono/zod-openapi";
+import { truncate } from "fs/promises";
 
 export const searchRoute = createRoute({
   method: "post",
@@ -83,8 +85,7 @@ export const searchRoute = createRoute({
       description: "Bad Request",
       content: {
         "application/json": {
-          schema: errorResponseSchema,
-          example: { error: "Bad Request" },
+          schema: z.union([errorResponseSchema, zodErrorResponseSchema]),
         },
       },
     },

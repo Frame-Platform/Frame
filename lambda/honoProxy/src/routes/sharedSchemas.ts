@@ -26,3 +26,16 @@ export const apiKeySchema = z.string().openapi({
     },
   },
 });
+
+const zodIssueSchema = z.object({
+  code: z.string(),
+  expected: z.any().optional(),
+  received: z.any().optional(),
+  path: z.array(z.union([z.string(), z.number()])),
+  message: z.string(),
+});
+
+export const zodErrorResponseSchema = z.object({
+  name: z.literal("ZodError"),
+  issues: z.array(zodIssueSchema),
+});
