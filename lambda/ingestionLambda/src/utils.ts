@@ -34,7 +34,7 @@ export const pgInsert = async (
   embedding: number[],
   pgClient: Client,
   url?: string | null,
-  desc?: string | null
+  description?: string | null,
 ): Promise<void> => {
   try {
     // this should be removed eventually
@@ -48,17 +48,17 @@ export const pgInsert = async (
                                 CONSTRAINT unique_url_desc UNIQUE (url, description)
                                 )`);
 
-    if (await documentExists(pgClient, url, desc)) return;
+    if (await documentExists(pgClient, url, description)) return;
 
     const query = `
               INSERT INTO documents (embedding, url, description)
               VALUES ($1, $2, $3)
               ON CONFLICT (url, description) DO NOTHING
           `;
-    // if url or desc is undefined, row will have a NULL value
-    await pgClient.query(query, [JSON.stringify(embedding), url, desc]);
+    // if url or description is undefined, row will have a NULL value
+    await pgClient.query(query, [JSON.stringify(embedding), url, description]);
     await pgClient.query(
-      `SELECT setval('documents_id_seq', (SELECT MAX(id) FROM documents));`
+      `SELECT setval('documents_id_seq', (SELECT MAX(id) FROM documents));`,
     );
   } catch (e) {
     throw new Error(`Error inserting document into database: ${e}`);
@@ -68,7 +68,7 @@ export const pgInsert = async (
 const documentExists = async (
   pgClient: Client,
   url?: string | null,
-  desc?: string | null
+  description?: string | null,
 ) => {
   const { rows } = await pgClient.query(
     `
@@ -79,14 +79,14 @@ const documentExists = async (
         (description = $2 OR ($2 IS NULL AND description IS NULL))
       LIMIT 1;
     `,
-    [url, desc]
+    [url, description],
   );
 
   return rows.length > 0 ? true : false;
 };
 
 export const resizeImageToLimit = async (
-  imageBuffer: Buffer
+  imageBuffer: Buffer,
 ): Promise<Buffer> => {
   const MAX_DIMENSION = 2048;
   try {
@@ -114,7 +114,7 @@ export const callTitan = async (payload: TitanInputType) => {
 
     const responseBedrock = await bedrockClient.send(command);
     const responseBody = JSON.parse(
-      Buffer.from(responseBedrock.body).toString()
+      Buffer.from(responseBedrock.body).toString(),
     );
 
     return responseBody.embedding;
@@ -133,7 +133,7 @@ export const downloadImage = async (url: string) => {
 
   if (!res.ok) {
     throw new Error(
-      `Non 200 response for url ${url}, status:${res.status} ${res.statusText}`
+      `Non 200 response for url ${url}, status:${res.status} ${res.statusText}`,
     );
   }
   const contentType = res.headers.get("content-type");
