@@ -13,7 +13,7 @@ test("creates queues with correct configuration", () => {
   // Verify main queue configuration
   template.hasResourceProperties("AWS::SQS::Queue", {
     QueueName: "TestMessagingStack-queue",
-    VisibilityTimeout: 900, // 15 minutes in seconds
+    VisibilityTimeout: 30, // 30 seconds
     RedrivePolicy: {
       deadLetterTargetArn: Match.objectLike({
         "Fn::GetAtt": Match.arrayWith([

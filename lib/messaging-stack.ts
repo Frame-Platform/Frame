@@ -26,7 +26,7 @@ export class MessagingStack extends cdk.Stack {
     // Note visibilityTimeout should match preprocess lambda timeout
     this.documentQueue = new sqs.Queue(this, "DocumentQueue", {
       queueName: `${id}-queue`,
-      visibilityTimeout: cdk.Duration.minutes(15),
+      visibilityTimeout: cdk.Duration.seconds(30),
       deadLetterQueue: {
         queue: this.deadLetterQueue,
         maxReceiveCount: 3,

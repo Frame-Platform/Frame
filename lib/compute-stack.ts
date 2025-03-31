@@ -4,7 +4,11 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as sqs from "aws-cdk-lib/aws-sqs";
 import * as lambdaEventSources from "aws-cdk-lib/aws-lambda-event-sources";
 import * as s3 from "aws-cdk-lib/aws-s3";
+import * as dotenv from "dotenv";
 import { Construct } from "constructs";
+
+// Load environment variables
+dotenv.config();
 
 // Props for the Compute Stack (third argument)
 export interface ComputeStackProps extends cdk.StackProps {
@@ -35,6 +39,8 @@ export class ComputeStack extends cdk.Stack {
 
   constructor(scope: Construct, id: string, props: ComputeStackProps) {
     super(scope, id, props);
+
+    const dbName = process.env.POSTGRES_DB_NAME || "fallback";
 
     // Create Lambda layers
     const s3Layer = new lambda.LayerVersion(this, "S3Layer", {
@@ -72,6 +78,9 @@ export class ComputeStack extends cdk.Stack {
         iam.ManagedPolicy.fromAwsManagedPolicyName(
           "service-role/AWSLambdaBasicExecutionRole"
         ),
+        iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonS3FullAccess"),
+        iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonSQSFullAccess"),
+        iam.ManagedPolicy.fromAwsManagedPolicyName("AWSLambda_FullAccess"),
       ],
     });
 
@@ -107,13 +116,14 @@ export class ComputeStack extends cdk.Stack {
       handler: "index.handler",
       // NOTE: Still need code and to route to correct file
       code: lambda.Code.fromAsset("lambda/lambdaDist/honoProxy.zip"),
-      memorySize: 1024,
+      memorySize: 1769,
       timeout: cdk.Duration.seconds(30),
       environment: {
         DOCUMENT_QUEUE_URL: props.documentQueue.queueUrl,
         DATABASE_SECRET_ARN: props.databaseSecretArn,
         DATABASE_HOST: props.databaseEndpoint,
         DATABASE_PORT: props.databasePort,
+        DATABASE_NAME: dbName,
         SEARCH_LAMBDA_ARN: "", // Updated after the search lambda is created (below)
         IMAGE_BUCKET_NAME: props.imageBucket.bucketName,
       },
@@ -124,6 +134,10 @@ export class ComputeStack extends cdk.Stack {
     // Grant API Lambda permission to send messages to SQS
     props.documentQueue.grantSendMessages(this.apiLambda);
 
+    // Grant the specific S3 permissions to the Lambda role
+    props.imageBucket.grantPut(this.apiLambda);
+    props.imageBucket.grantDelete(this.apiLambda);
+
     // Create role for the image ingestion lambda with base permissions
     const imageIngestionRole = new iam.Role(this, "ImageIngestionRole", {
       assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
@@ -131,17 +145,14 @@ export class ComputeStack extends cdk.Stack {
         iam.ManagedPolicy.fromAwsManagedPolicyName(
           "service-role/AWSLambdaBasicExecutionRole"
         ),
+        // Add the Bedrock full access policy
+        iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonBedrockFullAccess"),
+        // Add the SQS execution role policy
+        iam.ManagedPolicy.fromAwsManagedPolicyName(
+          "service-role/AWSLambdaSQSQueueExecutionRole"
+        ),
       ],
     });
-
-    // Add Bedrock permissions
-    imageIngestionRole.addToPolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ["bedrock:InvokeModel"],
-        resources: ["*"], // Scope this down to specific model in production
-      })
-    );
 
     // Add database access permissions for image ingestion lambda
     imageIngestionRole.addToPolicy(
@@ -161,15 +172,16 @@ export class ComputeStack extends cdk.Stack {
         handler: "index.handler",
         // NOTE: Still need code and to route to correct file
         code: lambda.Code.fromAsset("lambda/lambdaDist/ingestionLambda.zip"),
-        memorySize: 1024, // Higher memory for image processing
+        memorySize: 1769, // Higher memory for image processing
         // Default memory is 128MB - Max is 10,240 MB
         // Longer timeout for image ingestion Lambda
-        timeout: cdk.Duration.minutes(15),
+        timeout: cdk.Duration.seconds(30),
         environment: {
           DATABASE_SECRET_ARN: props.databaseSecretArn,
           DATABASE_HOST: props.databaseEndpoint,
           DATABASE_PORT: props.databasePort,
           BEDROCK_MODEL_ID: "amazon.titan-embed-image-v1",
+          DATABASE_NAME: dbName,
         },
         role: imageIngestionRole,
         layers: [sharpLayer, pgLayer, dotenvLayer, zodLayer],
@@ -183,24 +195,20 @@ export class ComputeStack extends cdk.Stack {
       })
     );
 
-    // Create role for the search lambda with base permissions
+    // Create role for the search lambda with base permissions and Bedrock full access
     const searchRole = new iam.Role(this, "SearchRole", {
       assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
       managedPolicies: [
         iam.ManagedPolicy.fromAwsManagedPolicyName(
           "service-role/AWSLambdaBasicExecutionRole"
         ),
+        iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonBedrockFullAccess"),
+        // Add the SQS execution role policy
+        iam.ManagedPolicy.fromAwsManagedPolicyName(
+          "service-role/AWSLambdaSQSQueueExecutionRole"
+        ),
       ],
     });
-
-    // Add Bedrock permissions
-    searchRole.addToPolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: ["bedrock:InvokeModel"],
-        resources: ["*"], // Scope this down to specific model in production
-      })
-    );
 
     // Add database access permissions for search lambda
     searchRole.addToPolicy(
@@ -219,7 +227,7 @@ export class ComputeStack extends cdk.Stack {
       code: lambda.Code.fromAsset("lambda/lambdaDist/searchLambda.zip"),
       // Higher memory for image processing
       // Default memory is 128MB - Max is 10,240 MB
-      memorySize: 1024,
+      memorySize: 1769,
       // Longer timeout for search Lambda
       timeout: cdk.Duration.seconds(30),
       environment: {
@@ -227,9 +235,10 @@ export class ComputeStack extends cdk.Stack {
         DATABASE_HOST: props.databaseEndpoint,
         DATABASE_PORT: props.databasePort,
         BEDROCK_MODEL_ID: "amazon.titan-embed-image-v1",
+        DATABASE_NAME: dbName,
       },
       role: searchRole,
-      layers: [sharpLayer, pgLayer, zodLayer],
+      layers: [sharpLayer, pgLayer, zodLayer, dotenvLayer],
     });
 
     // Update API Lambda environment with Search Lambda ARN

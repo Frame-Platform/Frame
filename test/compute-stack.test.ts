@@ -36,7 +36,7 @@ test("creates all Lambda functions with correct configuration", () => {
   template.hasResourceProperties("AWS::Lambda::Function", {
     Handler: "index.handler",
     Runtime: "nodejs22.x",
-    MemorySize: 1024,
+    MemorySize: 1769,
     Timeout: 30,
     Environment: {
       Variables: {
@@ -46,6 +46,8 @@ test("creates all Lambda functions with correct configuration", () => {
         DATABASE_HOST: "test-db.cluster-123.region.rds.amazonaws.com",
         DATABASE_PORT: "5432",
         IMAGE_BUCKET_NAME: Match.anyValue(),
+        DATABASE_NAME: Match.anyValue(),
+        AWS_REGION: Match.anyValue(),
       },
     },
   });
@@ -54,24 +56,7 @@ test("creates all Lambda functions with correct configuration", () => {
   template.hasResourceProperties("AWS::Lambda::Function", {
     Handler: "index.handler",
     Runtime: "nodejs22.x",
-    MemorySize: 1024,
-    Timeout: 900, // 15 minutes
-    Environment: {
-      Variables: {
-        DATABASE_SECRET_ARN:
-          "arn:aws:secretsmanager:region:account:secret:name",
-        DATABASE_HOST: "test-db.cluster-123.region.rds.amazonaws.com",
-        DATABASE_PORT: "5432",
-        BEDROCK_MODEL_ID: "amazon.titan-embed-image-v1",
-      },
-    },
-  });
-
-  // Verify Search Lambda
-  template.hasResourceProperties("AWS::Lambda::Function", {
-    Handler: "index.handler",
-    Runtime: "nodejs22.x",
-    MemorySize: 1024,
+    MemorySize: 1769,
     Timeout: 30,
     Environment: {
       Variables: {
@@ -80,6 +65,25 @@ test("creates all Lambda functions with correct configuration", () => {
         DATABASE_HOST: "test-db.cluster-123.region.rds.amazonaws.com",
         DATABASE_PORT: "5432",
         BEDROCK_MODEL_ID: "amazon.titan-embed-image-v1",
+        DATABASE_NAME: Match.anyValue(),
+      },
+    },
+  });
+
+  // Verify Search Lambda
+  template.hasResourceProperties("AWS::Lambda::Function", {
+    Handler: "index.handler",
+    Runtime: "nodejs22.x",
+    MemorySize: 1769,
+    Timeout: 30,
+    Environment: {
+      Variables: {
+        DATABASE_SECRET_ARN:
+          "arn:aws:secretsmanager:region:account:secret:name",
+        DATABASE_HOST: "test-db.cluster-123.region.rds.amazonaws.com",
+        DATABASE_PORT: "5432",
+        BEDROCK_MODEL_ID: "amazon.titan-embed-image-v1",
+        DATABASE_NAME: Match.anyValue(),
       },
     },
   });
@@ -99,18 +103,6 @@ test("creates IAM roles with correct permissions", () => {
   // Check for IAM roles
   const roles = template.findResources("AWS::IAM::Role");
   expect(Object.keys(roles).length).toBeGreaterThan(0);
-
-  // Check for Bedrock permissions
-  template.hasResourceProperties("AWS::IAM::Policy", {
-    PolicyDocument: {
-      Statement: Match.arrayWith([
-        Match.objectLike({
-          Action: "bedrock:InvokeModel",
-          Effect: "Allow",
-        }),
-      ]),
-    },
-  });
 
   // Check for Secrets Manager permissions
   template.hasResourceProperties("AWS::IAM::Policy", {

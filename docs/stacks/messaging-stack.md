@@ -13,7 +13,7 @@ The Messaging Stack creates the following AWS resources:
 
 The SQS queues are configured with the following non-default settings:
 
-- Visibility Timeout (How long a message is invisible after a consumer receives it): 15 minutes
+- Visibility Timeout (How long a message is invisible after a consumer receives it): 30 seconds
 
 This setting is intended to match the timeout of the pre-processing lambda which takes documents from the main SQS queue and is optimized for document processing workloads (providing a balance of reliability and cost-effectiveness).
 
