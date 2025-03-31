@@ -77,7 +77,7 @@ export const createDocumentHandler: RouteHandler<
 
       return {
         url: image.url,
-        desc: image.desc,
+        description: image.description,
         success: !!successEntry,
         errors: failedEntry ? failedEntry.Message || "Unknown Error" : "",
       };

@@ -18,7 +18,7 @@ export const handler = async (
 ): Promise<APIGatewayProxyResult> => {
   try {
     const validationResult = payloadSchema.parse(event);
-    const { url, desc, threshold, topK } = validationResult;
+    const { url, description, threshold, topK } = validationResult;
 
     let imagePayload = {};
     if (url) {
@@ -28,7 +28,7 @@ export const handler = async (
     }
 
     // gather titan inputs
-    const textPayload = desc ? { inputText: desc } : {};
+    const textPayload = description ? { inputText: description } : {};
     const payload: TitanInputType = { ...imagePayload, ...textPayload };
 
     const { embedding } = await callTitan(payload);
@@ -40,7 +40,7 @@ export const handler = async (
       SELECT
           id,
           url,
-          description as desc,
+          description,
           timestamp,
           1 - (embedding <=> $1::vector) AS score
       FROM

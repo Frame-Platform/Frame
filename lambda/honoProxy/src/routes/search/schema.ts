@@ -22,8 +22,8 @@ const searchSchema = z.object({
 
 export const searchJSONSchema = baseDocumentSchema
   .extend({ ...searchSchema.shape })
-  .refine((data) => data.url || data.desc, {
-    message: "At least one of url or desc must be provided.",
+  .refine((data) => data.url || data.description, {
+    message: "At least one of url or description must be provided.",
   });
 
 export const searchMultipartSchema = z
@@ -59,11 +59,11 @@ export const searchMultipartSchema = z
           },
         ),
     ),
-    desc: z.string().optional(),
+    description: z.string().optional(),
   })
   .extend({ ...searchSchema.shape })
-  .refine((data) => data.image || data.desc, {
-    message: "At least one of image or desc must be provided.",
+  .refine((data) => data.image || data.description, {
+    message: "At least one of image or description must be provided.",
   });
 
 export type SearchMulitpartType = z.infer<typeof searchMultipartSchema>;
