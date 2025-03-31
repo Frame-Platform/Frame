@@ -17,10 +17,10 @@ export const searchHandler: RouteHandler<typeof searchRoute> = async (c) => {
       searchRequest = c.req.valid("json");
     } else if (contentType.startsWith("multipart/form-data")) {
       const formData = c.req.valid("form") as SearchMulitpartType;
-      const { image, desc, threshold, topK } = formData;
+      const { image, description, threshold, topK } = formData;
 
       searchRequest = {
-        ...(desc && { desc }),
+        ...(description && { description }),
         threshold,
         topK,
       };

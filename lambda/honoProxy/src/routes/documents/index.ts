@@ -37,12 +37,12 @@ export const getDocumentsRoute = createRoute({
               {
                 id: 1,
                 url: "https://example.com/pic1.png",
-                desc: "First image",
+                description: "First image",
               },
               {
                 id: 2,
                 url: "https://example.com/pic2.png",
-                desc: "Second image",
+                description: "Second image",
               },
             ],
             limit: 2,
@@ -88,7 +88,7 @@ export const getDocumentByIdRoute = createRoute({
             document: {
               id: 7,
               url: "https://example.com/monkeyselfie.jpeg",
-              desc: "An image of monkey takign a selfie.",
+              description: "An image of monkey takign a selfie.",
             },
           },
         },
@@ -131,10 +131,10 @@ export const createDocumentRoute = createRoute({
             images: [
               {
                 url: "https://example.com/image1.jpg",
-                desc: "A photo of the Colosseum in Rome",
+                description: "A photo of the Colosseum in Rome",
               },
               {
-                desc: "An image with no URL, only a description",
+                description: "An image with no URL, only a description",
               },
             ],
           },
@@ -153,18 +153,18 @@ export const createDocumentRoute = createRoute({
           example: [
             {
               url: "https://example.com/image1.jpg",
-              desc: "A photo of the Colosseum in Rome",
+              description: "A photo of the Colosseum in Rome",
               success: true,
             },
             {
-              desc: "An image with no URL, only a description",
+              description: "An image with no URL, only a description",
               success: true,
             },
             {
               url: null,
-              desc: null,
+              description: null,
               success: false,
-              errors: "At least one of url or desc must be provided.",
+              errors: "At least one of url or description must be provided.",
             },
           ],
         },
@@ -206,7 +206,7 @@ export const deleteDocumentRoute = createRoute({
             document: {
               id: 42,
               url: "https://example.com/resource.pdf",
-              desc: "A sample document",
+              description: "A sample document",
             },
           },
         },

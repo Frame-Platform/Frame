@@ -11,7 +11,7 @@ export const errorResponseSchema = z.object({
 
 export const baseDocumentSchema = z.object({
   url: z.string().url({ message: "Invalid URL format" }).optional().nullable(),
-  desc: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
 });
 export type BaseDocumentType = z.infer<typeof baseDocumentSchema>;
 
