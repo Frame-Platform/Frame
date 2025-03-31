@@ -33,7 +33,7 @@ export const searchHandler: RouteHandler<typeof searchRoute> = async (c) => {
     }
 
     if (message === undefined) {
-      throw new Error("Error message undefined");
+      throw new Error("Search Request 'undefined'");
     }
 
     const { statusCode, error, documents } = await invokeSearchLambda(message);

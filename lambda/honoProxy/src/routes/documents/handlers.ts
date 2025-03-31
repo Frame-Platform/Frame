@@ -32,7 +32,7 @@ export const getDocumentsHandler: RouteHandler<
     );
   } catch (e) {
     console.log(`Error in getDocumentsHandler: ${e}`);
-    return c.json({ error: "Internal server error." }, 500);
+    return c.json({ error: "Internal Server Error." }, 500);
   }
 };
 
@@ -45,13 +45,13 @@ export const getDocumentByIdHandler: RouteHandler<
     const document = queryResults.rows[0];
 
     if (!document) {
-      return c.json({ error: `Document ${id} not found` }, 404);
+      return c.json({ error: `Document Not Found` }, 404);
     }
 
     return c.json({ document }, 200);
   } catch (e) {
     console.log(`Error in getDocumentsByIdHandler: ${e}`);
-    return c.json({ error: "Internal server error." }, 500);
+    return c.json({ error: "Internal Server Error." }, 500);
   }
 };
 
@@ -86,7 +86,7 @@ export const createDocumentHandler: RouteHandler<
     return c.json(messageStatuses, 200);
   } catch (e) {
     console.log(`Error in createDocumentHandler: ${e}`);
-    return c.json({ error: "Internal server error." }, 500);
+    return c.json({ error: "Internal Server Error." }, 500);
   }
 };
 
@@ -99,7 +99,7 @@ export const deleteDocumentHandler: RouteHandler<
     const queryResult = await pgDeleteDocument(id);
 
     if (queryResult.rowCount === 0) {
-      return c.json({ error: "Document not found" }, 404);
+      return c.json({ error: "Document Not Found" }, 404);
     }
 
     return c.json({ document: queryResult.rows[0] }, 200);
