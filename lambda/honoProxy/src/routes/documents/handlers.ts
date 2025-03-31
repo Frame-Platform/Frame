@@ -26,7 +26,7 @@ export const getDocumentsHandler: RouteHandler<
         documents,
         limit,
         offset,
-        total: documents.length,
+        count: documents.length,
       },
       200,
     );

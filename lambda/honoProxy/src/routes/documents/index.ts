@@ -18,8 +18,11 @@ export const getDocumentsRoute = createRoute({
       "x-api-key": apiKeySchema,
     }),
     query: paginationSchema.describe("Pagination query parameters"),
-    description:
-      "Retrieve a paginated list of documents. Defaults to returning all documents unless limit/offset are provided.",
+    description: "Retrieve a paginated list of documents.",
+    example: {
+      limit: 10,
+      offset: 20,
+    },
   },
   responses: {
     200: {
@@ -30,7 +33,7 @@ export const getDocumentsRoute = createRoute({
             documents: z.array(documentReturnSchema),
             limit: z.number(),
             offset: z.number(),
-            total: z.number(),
+            count: z.number(),
           }),
           example: {
             documents: [
@@ -47,7 +50,7 @@ export const getDocumentsRoute = createRoute({
             ],
             limit: 2,
             offset: 0,
-            total: 2,
+            count: 2,
           },
         },
       },
@@ -72,7 +75,8 @@ export const getDocumentByIdRoute = createRoute({
     headers: z.object({
       "x-api-key": apiKeySchema,
     }),
-    params: idPathSchema.describe("Path parameter for document ID"),
+    params: idPathSchema.describe("A unique identifier for the document."),
+    example: "123",
     description:
       "Retrieve a document by its numeric ID. The ID must be a non-negative integer.",
   },
@@ -190,7 +194,8 @@ export const deleteDocumentRoute = createRoute({
     headers: z.object({
       "x-api-key": apiKeySchema,
     }),
-    params: idPathSchema.describe("Path parameter for document ID"),
+    params: idPathSchema.describe("A unique identifier for the document."),
+    example: "123",
     description:
       "Delete a document by its numeric ID. ID must be a non-negative integer.",
   },
