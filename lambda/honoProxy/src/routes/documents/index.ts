@@ -1,5 +1,9 @@
 import { createRoute } from "@hono/zod-openapi";
-import { errorResponseSchema, apiKeySchema } from "../sharedSchemas";
+import {
+  errorResponseSchema,
+  apiKeySchema,
+  zodErrorResponseSchema,
+} from "../sharedSchemas";
 import { z } from "@hono/zod-openapi";
 import {
   idPathSchema,
@@ -8,6 +12,7 @@ import {
   documentReturnSchema,
   documentSchema,
 } from "./schema";
+import { ZodError } from "zod";
 
 export const getDocumentsRoute = createRoute({
   method: "get",
@@ -55,6 +60,14 @@ export const getDocumentsRoute = createRoute({
         },
       },
     },
+    400: {
+      description: "Bad Request",
+      content: {
+        "application/json": {
+          schema: zodErrorResponseSchema,
+        },
+      },
+    },
     500: {
       description: "Server Error",
       content: {
@@ -95,6 +108,14 @@ export const getDocumentByIdRoute = createRoute({
               description: "An image of monkey takign a selfie.",
             },
           },
+        },
+      },
+    },
+    400: {
+      description: "Bad Request",
+      content: {
+        "application/json": {
+          schema: zodErrorResponseSchema,
         },
       },
     },
@@ -174,6 +195,14 @@ export const createDocumentRoute = createRoute({
         },
       },
     },
+    400: {
+      description: "Bad Request",
+      content: {
+        "application/json": {
+          schema: zodErrorResponseSchema,
+        },
+      },
+    },
     500: {
       description: "Server Error",
       content: {
@@ -214,6 +243,14 @@ export const deleteDocumentRoute = createRoute({
               description: "A sample document",
             },
           },
+        },
+      },
+    },
+    400: {
+      description: "Bad Request",
+      content: {
+        "application/json": {
+          schema: zodErrorResponseSchema,
         },
       },
     },
