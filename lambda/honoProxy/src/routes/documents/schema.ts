@@ -1,9 +1,12 @@
 import { z } from "@hono/zod-openapi";
 import { baseDocumentSchema } from "../sharedSchemas";
 
-import { VALID_TYPES, MAX_SIZE } from "../sharedSchemas";
-const DEFAULT_PAGINATION_LIMIT = 20;
-const MAX_PAGINATION_LIMIT = 100;
+import {
+  VALID_IMAGE_TYPES,
+  MAX_IMAGE_SIZE,
+  DEFAULT_PAGINATION_LIMIT,
+  MAX_PAGINATION_LIMIT,
+} from "../sharedSchemas";
 
 export const idPathSchema = z.object({
   id: z
@@ -50,13 +53,13 @@ export const validateImageResultSchema = baseDocumentSchema.extend({
 export type ValidImageResult = z.infer<typeof validateImageResultSchema>;
 
 export const imageResponseSchema = z.object({
-  contentType: z.string().refine((val) => VALID_TYPES.includes(val), {
+  contentType: z.string().refine((val) => VALID_IMAGE_TYPES.includes(val), {
     message: "Invalid file type. Only JPEG and PNG images are allowed.",
   }),
   contentLength: z
     .string()
     .transform((val) => parseInt(val, 10))
-    .refine((val) => val < MAX_SIZE, {
+    .refine((val) => val < MAX_IMAGE_SIZE, {
       message: "File size exceeds the limit of 5 MB.",
     }),
 });
