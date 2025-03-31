@@ -1,5 +1,5 @@
 import { createRoute } from "@hono/zod-openapi";
-import { errorResponseSchema } from "../sharedSchemas";
+import { errorResponseSchema, apiKeySchema } from "../sharedSchemas";
 import { z } from "@hono/zod-openapi";
 import {
   idPathSchema,
@@ -14,6 +14,9 @@ export const getDocumentsRoute = createRoute({
   path: "/document",
   description: "Get a paginated list of documents",
   request: {
+    headers: z.object({
+      "x-api-key": apiKeySchema,
+    }),
     query: paginationSchema.describe("Pagination query parameters"),
     description:
       "Retrieve a paginated list of documents. Defaults to returning all documents unless limit/offset are provided.",
@@ -65,6 +68,9 @@ export const getDocumentByIdRoute = createRoute({
   path: "/document/{id}",
   description: "Find a document by an ID",
   request: {
+    headers: z.object({
+      "x-api-key": apiKeySchema,
+    }),
     params: idPathSchema.describe("Path parameter for document ID"),
     description:
       "Retrieve a document by its numeric ID. The ID must be a non-negative integer.",
@@ -111,6 +117,9 @@ export const createDocumentRoute = createRoute({
   path: "/document",
   description: "Add new document(s)",
   request: {
+    headers: z.object({
+      "x-api-key": apiKeySchema,
+    }),
     body: {
       content: {
         "application/json": {
@@ -174,6 +183,9 @@ export const deleteDocumentRoute = createRoute({
   path: "/document/{id}",
   description: "Deleteing a document",
   request: {
+    headers: z.object({
+      "x-api-key": apiKeySchema,
+    }),
     params: idPathSchema.describe("Path parameter for document ID"),
     description:
       "Delete a document by its numeric ID. ID must be a non-negative integer.",

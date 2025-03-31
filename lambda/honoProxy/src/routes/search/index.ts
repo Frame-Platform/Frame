@@ -4,7 +4,7 @@ import {
   searchMultipartSchema,
   searchResultSchema,
 } from "./schema";
-import { errorResponseSchema } from "../sharedSchemas";
+import { apiKeySchema, errorResponseSchema } from "../sharedSchemas";
 import { z } from "@hono/zod-openapi";
 
 export const searchRoute = createRoute({
@@ -12,6 +12,9 @@ export const searchRoute = createRoute({
   path: "/search",
   description: "Search for documents using an image or description",
   request: {
+    headers: z.object({
+      "x-api-key": apiKeySchema,
+    }),
     body: {
       content: {
         "application/json": {

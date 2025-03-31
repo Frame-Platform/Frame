@@ -12,3 +12,15 @@ export const baseDocumentSchema = z.object({
   desc: z.string().optional().nullable(),
 });
 export type BaseDocumentType = z.infer<typeof baseDocumentSchema>;
+
+export const apiKeySchema = z.string().openapi({
+  description: "API key for authentication",
+  param: {
+    name: "x-api-key",
+    in: "header",
+    required: true,
+    schema: {
+      type: "string",
+    },
+  },
+});
