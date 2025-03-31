@@ -18,10 +18,6 @@ const layerDirectories = [
 ];
 */
 
-// Update script to try and include all of the other steps i.e. user can basically
-// just run this script to install everything (SEE README.MD steps) and then
-// start document-embedding init :O
-
 try {
   console.log("=== Setting up project environment ===");
 
@@ -77,17 +73,17 @@ try {
 
   console.log("=== Build Process Complete ===");
   console.log(`
-    Project dependencies installed
-    CLI tool built and linked globally
-    Lambda functions built and packaged
-    Lambda layers built and packaged
+• Project dependencies installed
+• CLI tool built and linked globally
+• Lambda functions built and packaged
 
-    You can now use the following commands:
-      • document-embedding init   - Initialize configuration
-      • document-embedding deploy - Deploy infrastructure to AWS
-      • document-embedding destroy - Remove infrastructure from AWS
-    
-    Please begin the initialization step by running document-embedding init
+You can now use the following commands:
+
+• document-embedding init   - Initialize configuration
+• document-embedding deploy - Deploy infrastructure to AWS
+• document-embedding destroy - Remove infrastructure from AWS
+
+Please begin the initialization step by running document-embedding init
 `);
 } catch (e) {
   console.error("Build Failed");
