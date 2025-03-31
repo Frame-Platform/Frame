@@ -5,7 +5,7 @@
     "cdk": "bin/cdk.js"
   },
   "scripts": {
-    "build:lambdas": "node build-all.js",
+    "build:all": "node build-all.js",
     "build": "tsc",
     "watch": "tsc -w",
     "test": "jest",
