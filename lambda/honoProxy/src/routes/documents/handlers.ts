@@ -105,6 +105,6 @@ export const deleteDocumentHandler: RouteHandler<
     return c.json({ document: queryResult.rows[0] }, 200);
   } catch (e) {
     console.log(`Error in deleteDocumentHandler: ${e}`);
-    return c.json({ error: "Internal server error." }, 500);
+    return c.json({ error: "Internal Server Error." }, 500);
   }
 };

@@ -57,6 +57,7 @@ export const getDocumentsRoute = createRoute({
       content: {
         "application/json": {
           schema: errorResponseSchema,
+          example: { error: "Internal Server Error." },
         },
       },
     },
@@ -94,10 +95,11 @@ export const getDocumentByIdRoute = createRoute({
       },
     },
     404: {
-      description: "Document not found",
+      description: "Document Not Found",
       content: {
         "application/json": {
           schema: errorResponseSchema,
+          example: { error: "Document Not Found" },
         },
       },
     },
@@ -106,6 +108,7 @@ export const getDocumentByIdRoute = createRoute({
       content: {
         "application/json": {
           schema: errorResponseSchema,
+          example: { error: "Internal Server Error." },
         },
       },
     },
@@ -172,6 +175,7 @@ export const createDocumentRoute = createRoute({
       content: {
         "application/json": {
           schema: errorResponseSchema,
+          example: { error: "Internal Server Error." },
         },
       },
     },
@@ -213,6 +217,7 @@ export const deleteDocumentRoute = createRoute({
       content: {
         "application/json": {
           schema: errorResponseSchema,
+          example: { error: "Document Not Found" },
         },
       },
     },
@@ -221,6 +226,7 @@ export const deleteDocumentRoute = createRoute({
       content: {
         "application/json": {
           schema: errorResponseSchema,
+          example: { error: "Internal Server Error." },
         },
       },
     },

@@ -45,6 +45,7 @@ export const searchRoute = createRoute({
       content: {
         "application/json": {
           schema: errorResponseSchema,
+          example: { error: "Bad Request" },
         },
       },
     },
@@ -53,6 +54,7 @@ export const searchRoute = createRoute({
       content: {
         "application/json": {
           schema: errorResponseSchema,
+          example: { error: "Internal Server Error." },
         },
       },
     },
