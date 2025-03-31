@@ -57,29 +57,41 @@ call();
 
 
 
-async function callGetDocById(id: string) {
-  let response;
+async function callGetDocById(id: string): Promise<SDKTypes.DocumentResponse> {
+  if (!id) {
+    throw new Error("Document ID is required");
+  }
 
   try {
-    response = await fetch(`${BASE_URL}/document/${id}`, {
+    const response = await fetch(`${BASE_URL}/document/${id}`, {
+      method: 'GET',
       headers: {
         "x-api-key": API_KEY,
+        "Accept": "application/json"
       }
     })
 
     if (!response.ok) {
-      throw new Error(`Response status: ${response.status} - ${response.statusText}`);
+      if (response.status === 404) {
+        throw new Error(`Document with ID ${id} not found`);
+      } else if (response.status === 400) {
+        throw new Error(`Bad request: Invalid document ID format`);
+      } else if (response.status === 401 || response.status === 403) {
+        throw new Error(`Authentication or authorization error`);
+      } else if (response.status === 500) {
+        throw new Error(`Server error occurred while retrieving document`);
+      } else {
+        throw new Error(`Failed to retrieve document: ${response.status} ${response.statusText}`);
+      }
     }
 
     const json = await response.json();
-    console.log("Response JSON:", json);
-    // return json;
+    console.log(json)
+    return json;
   } catch (error: unknown) {
-    console.error("Error in callGetById:", error);
-    throw new Error(`Error fetching document with ID ${id}: ${error instanceof Error ? error.message : error}`);
+    console.error("Error in callGetDocById:", error);
+    throw new Error(`Error fetching document with ID ${id}: ${error instanceof Error ? error.message : String(error)}`);
   }
-
-  return response;
 }
 
 /*
@@ -139,10 +151,42 @@ async function callSearch() { // no parameters
 
 // callSearch();
 
-async function callDeleteDocById(id: string) {
+async function callDeleteDocById(id: string): Promise<SDKTypes.DeleteDocumentResponse> {
+  if (!id) {
+    throw new Error("Document ID is required");
+  }
 
+  try {
+    // Include query parameters in the request
+    const response = await fetch(`${BASE_URL}/delete/${id}`, {
+      method: 'DELETE',
+      headers: {
+        "x-api-key": API_KEY,
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      if (response.status === 400) {
+        throw new Error(`Bad request: Invalid document ID or format`);
+      } else if (response.status === 404) {
+        throw new Error(`Document with ID ${id} not found`);
+      } else if (response.status === 500) {
+        throw new Error(`Server error occurred while deleting document`);
+      } else {
+        throw new Error(`Failed to delete document: ${response.status} ${response.statusText}`);
+      }
+    }
+
+    const result = await response.json();
+    return result;
+  } catch (error: unknown) {
+    console.error("Error in callDeleteDocById:", error);
+    throw new Error(`Error deleting document: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
+// callDeleteDocById('152');
 
 export class DocumentAPI {
   private apiKey: string;
@@ -151,41 +195,58 @@ export class DocumentAPI {
     this.apiKey = apiKey;
   }
 
-  private async fetchDocuments({ limit, offset }): Promise<any> {
-    let response;
+  public async callGetDocById2(
+    { limit = '10', offset = '0' }: SDKTypes.GetDocsParameter
+  ): Promise<SDKTypes.DocumentsResponse> {
     try {
-      response = await fetch(`${BASE_URL}/document`, {
+      // Include query parameters in the request
+      const url = new URL(`${BASE_URL}/document`);
+      url.searchParams.append('limit', limit.toString());
+      url.searchParams.append('offset', offset.toString());
+
+      const response = await fetch(url.toString(), {
+        method: 'GET',
         headers: {
-          'x-api-key': this.apiKey,
-        },
+          "x-api-key": API_KEY,
+          "Accept": "application/json"
+        }
       });
 
       if (!response.ok) {
-        throw new Error(`Response status: ${response.status} - ${response.statusText}`);
+        throw new Error(`API error: ${response.status} - ${response.statusText}`);
       }
 
       const json = await response.json();
-      console.log('Response JSON:', json);
-      return json;
-    } catch (error: unknown) {
-      console.error('Error fetching documents:', error);
-      throw new Error(
-        `Error fetching documents: ${error instanceof Error ? error.message : error}`
-      );
-    }
 
-  }
-    // Method to get documents
-    public async getDocuments(params: SDKTypes.GetDocsParameter): Promise<SDKTypes.GetDocsReturn> {
-      return await this.fetchDocuments(params);
+      // Assuming the API doesn't handle pagination and returns all documents
+      // We manually handle pagination client-side
+      const paginatedDocuments = json.documents.slice(offset, offset + limit);
+
+      return {
+        documents: paginatedDocuments,
+        limit: limit,
+        offset: offset,
+        total: json.documents?.length || 0 // Return actual total count, not just limit
+      };
+    } catch (error: unknown) {
+      console.error("Error in callGetDocuments:", error);
+      throw new Error(`Error fetching documents: ${error instanceof Error ? error.message : String(error)}`);
     }
+  }
+
+  /*
+  public async getDocById(id: string): Promise<SDKTypes.DocumentsResponse> {
+    return await this.callGetDocById(id);
+  }
+*/
 }
 
-/* const params = {
-  limit: '10',
-  offset: '0',
-};
-
+// const params = {
+//   limit: '1',
+//   offset: '1',
+// };
+/*
+Test
 let api = new DocumentAPI(API_KEY);
 console.log(api.getDocuments(params));
- */
+*/
