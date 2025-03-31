@@ -40,7 +40,7 @@ export const handler = async (
       SELECT
           id,
           url,
-          description,
+          description as desc,
           timestamp,
           1 - (embedding <=> $1::vector) AS score
       FROM
