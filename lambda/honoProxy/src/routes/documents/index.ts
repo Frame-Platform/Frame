@@ -168,7 +168,7 @@ export const createDocumentRoute = createRoute({
 
 export const deleteDocumentRoute = createRoute({
   method: "delete",
-  path: "/delete/{id}",
+  path: "/document/{id}",
   request: {
     params: idPathSchema.describe("Path parameter for document ID"),
     description:
