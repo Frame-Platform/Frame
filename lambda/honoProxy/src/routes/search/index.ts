@@ -37,6 +37,18 @@ export const searchRoute = createRoute({
             hits: searchResultSchema,
             count: z.number(),
           }),
+          example: {
+            hits: [
+              {
+                id: 171,
+                url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+                desc: "A monkey taking a selfie.",
+                timestamp: "2025-03-31T16:30:41.484Z",
+                score: 0.6692581354088997,
+              },
+            ],
+            count: 1,
+          },
         },
       },
     },
