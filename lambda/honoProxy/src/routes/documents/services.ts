@@ -40,7 +40,7 @@ export const pgDeleteDocument = async (id: number) => {
   try {
     const pgClient = await pgConnect();
     const query = `
-      DELETE FROM documents WHERE id = $1 RETURNING id, url, desc;
+      DELETE FROM documents WHERE id = $1 RETURNING id, url, desc
     `;
 
     return await pgClient.query(query, [id]);
