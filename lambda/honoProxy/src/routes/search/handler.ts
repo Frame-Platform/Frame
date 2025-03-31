@@ -11,15 +11,15 @@ export const searchHandler: RouteHandler<typeof searchRoute> = async (c) => {
   let imageKey: string | null = null;
   try {
     const contentType = c.req.header("Content-Type") || "";
-    let message: SearchJSONType | undefined;
+    let searchRequest: SearchJSONType | undefined;
 
     if (contentType.startsWith("application/json")) {
-      message = c.req.valid("json");
+      searchRequest = c.req.valid("json");
     } else if (contentType.startsWith("multipart/form-data")) {
       const formData = c.req.valid("form") as SearchMulitpartType;
       const { image, desc, threshold, topK } = formData;
 
-      message = {
+      searchRequest = {
         ...(desc && { desc }),
         threshold,
         topK,
@@ -28,15 +28,16 @@ export const searchHandler: RouteHandler<typeof searchRoute> = async (c) => {
       if (image && image.size > 0) {
         const { url, key } = await uploadImageToS3(image);
         imageKey = key;
-        message = { ...message, url };
+        searchRequest = { ...searchRequest, url };
       }
     }
 
-    if (message === undefined) {
+    if (searchRequest === undefined) {
       throw new Error("Search Request 'undefined'");
     }
 
-    const { statusCode, error, documents } = await invokeSearchLambda(message);
+    const { statusCode, error, documents } =
+      await invokeSearchLambda(searchRequest);
     if (statusCode === 400) {
       return c.json({ error }, 400);
     }
