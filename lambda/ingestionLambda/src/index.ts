@@ -15,7 +15,7 @@ export const handler = async (event: SQSEvent) => {
   try {
     const message = JSON.parse(event.Records[0].body);
     const validationResult = payloadSchema.parse(message);
-    const { url, desc } = validationResult;
+    const { url, description } = validationResult;
 
     // Fetch the image and create a buffer
     let imageBuffer;
@@ -30,7 +30,7 @@ export const handler = async (event: SQSEvent) => {
       imagePayload = { inputImage: resizedBuffer.toString("base64") };
     }
 
-    const textPayload = desc ? { inputText: desc } : {};
+    const textPayload = description ? { inputText: description } : {};
     const payload = { ...imagePayload, ...textPayload };
 
     // Embed the document
@@ -41,7 +41,7 @@ export const handler = async (event: SQSEvent) => {
       pgClient = await pgConnect();
     }
 
-    await pgInsert(embedding, pgClient, url, desc);
+    await pgInsert(embedding, pgClient, url, description);
 
     // Send response back
     const response = {
@@ -49,7 +49,7 @@ export const handler = async (event: SQSEvent) => {
       body: JSON.stringify({
         message: "Document was successfully ingested",
         url,
-        desc,
+        description,
         embedding,
       }),
     };
