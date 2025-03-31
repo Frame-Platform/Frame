@@ -6,6 +6,7 @@ import {
   invokeSearchLambda,
 } from "./services";
 import { searchRoute } from ".";
+import { ImageValidationError } from "../sharedSchemas";
 
 export const searchHandler: RouteHandler<typeof searchRoute> = async (c) => {
   let imageKey: string | null = null;
@@ -42,6 +43,11 @@ export const searchHandler: RouteHandler<typeof searchRoute> = async (c) => {
     return c.json({ hits: documents, count: documents.length }, 200);
   } catch (e) {
     console.log(`Error in searchHandler ${e}`);
+
+    if (e instanceof ImageValidationError) {
+      return c.json({ error: e.message }, 400);
+    }
+
     return c.json({ error: "Internal Server Error" }, 500);
   } finally {
     if (imageKey) {
