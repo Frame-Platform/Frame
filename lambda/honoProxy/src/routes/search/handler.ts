@@ -6,7 +6,6 @@ import {
   invokeSearchLambda,
 } from "./services";
 import { searchRoute } from ".";
-import { ImageValidationError } from "../sharedSchemas";
 
 export const searchHandler: RouteHandler<typeof searchRoute> = async (c) => {
   let imageKey: string | null = null;
@@ -15,12 +14,10 @@ export const searchHandler: RouteHandler<typeof searchRoute> = async (c) => {
     let message: SearchJSONType | undefined;
 
     if (contentType.startsWith("application/json")) {
-      const jsonData = c.req.valid("json");
-      message = jsonData;
+      message = c.req.valid("json");
     } else if (contentType.startsWith("multipart/form-data")) {
-      const { image, desc, threshold, topK } = c.req.valid(
-        "form",
-      ) as SearchMulitpartType;
+      const formData = c.req.valid("form") as SearchMulitpartType;
+      const { image, desc, threshold, topK } = formData;
 
       message = {
         ...(desc && { desc }),
@@ -38,15 +35,15 @@ export const searchHandler: RouteHandler<typeof searchRoute> = async (c) => {
     if (message === undefined) {
       throw new Error("Error message undefined");
     }
-    const documents = await invokeSearchLambda(message);
+
+    const { statusCode, error, documents } = await invokeSearchLambda(message);
+    if (statusCode === 400) {
+      return c.json({ error }, 400);
+    }
 
     return c.json({ hits: documents, count: documents.length }, 200);
   } catch (e) {
     console.log(`Error in searchHandler ${e}`);
-
-    if (e instanceof ImageValidationError) {
-      return c.json({ error: e.message }, 400);
-    }
 
     return c.json({ error: "Internal Server Error" }, 500);
   } finally {

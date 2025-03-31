@@ -12,5 +12,3 @@ export const baseDocumentSchema = z.object({
   desc: z.string().optional().nullable(),
 });
 export type BaseDocumentType = z.infer<typeof baseDocumentSchema>;
-
-export class ImageValidationError extends Error {}

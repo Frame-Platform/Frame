@@ -1,4 +1,3 @@
-import { ImageValidationError } from "../sharedSchemas";
 import { searchJSONSchema } from "./schema";
 import {
   S3Client,
@@ -70,9 +69,13 @@ export const invokeSearchLambda = async (
     const payloadBuffer = Buffer.from(res.Payload as Uint8Array);
     const payloadString = payloadBuffer.toString("utf8");
     const lambdaResponse = JSON.parse(payloadString);
+    const body = JSON.parse(lambdaResponse.body);
 
     if (lambdaResponse.statusCode === 400) {
-      throw new ImageValidationError(lambdaResponse.body?.message);
+      return {
+        statusCode: lambdaResponse.statusCode,
+        error: body.error,
+      };
     }
 
     if (lambdaResponse.statusCode !== 200) {
@@ -81,7 +84,7 @@ export const invokeSearchLambda = async (
       );
     }
 
-    return JSON.parse(lambdaResponse.body);
+    return { statusCode: lambdaResponse.statusCode, documents: body };
   } catch (e) {
     throw new Error(`Error executing searchLambda ${e}`);
   }
