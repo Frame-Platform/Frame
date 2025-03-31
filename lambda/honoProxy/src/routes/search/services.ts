@@ -1,10 +1,11 @@
+import { ImageValidationError } from "../sharedSchemas";
+import { searchJSONSchema } from "./schema";
 import {
   S3Client,
   DeleteObjectCommand,
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
 import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
-import { searchJSONSchema } from "./schema";
 import { z } from "@hono/zod-openapi";
 
 export const deleteImageFromS3 = async (key: string) => {
@@ -60,12 +61,28 @@ export const invokeSearchLambda = async (
       Payload: Buffer.from(JSON.stringify(message)),
     });
     const res = await lambdaClient.send(command);
-    const payloadString = Buffer.from(res.Payload as Uint8Array).toString(
-      "utf8",
-    );
-    const lambdaRespose = JSON.parse(payloadString);
-    return JSON.parse(lambdaRespose.body);
+    if (res.StatusCode !== 200) {
+      throw new Error(
+        `Lambda invocation failed with status code: ${res.StatusCode}`,
+      );
+    }
+
+    const payloadBuffer = Buffer.from(res.Payload as Uint8Array);
+    const payloadString = payloadBuffer.toString("utf8");
+    const lambdaResponse = JSON.parse(payloadString);
+
+    if (lambdaResponse.statusCode === 400) {
+      throw new ImageValidationError(lambdaResponse.body?.message);
+    }
+
+    if (lambdaResponse.statusCode !== 200) {
+      throw new Error(
+        `Non 200 response from searchLambda, status code: ${res.StatusCode}`,
+      );
+    }
+
+    return JSON.parse(lambdaResponse.body);
   } catch (e) {
-    throw new Error(`Error executing search ${e}`);
+    throw new Error(`Error executing searchLambda ${e}`);
   }
 };

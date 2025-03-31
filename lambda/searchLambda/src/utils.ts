@@ -5,6 +5,7 @@ import {
 } from "@aws-sdk/client-bedrock-runtime";
 import { TitanInputType } from "./types";
 import { Client } from "pg";
+import { ImageValidationError } from "./types";
 
 export const pgConnect = async () => {
   try {
@@ -45,17 +46,21 @@ export const downloadImage = async (url: string) => {
   try {
     res = await fetch(url);
   } catch (e) {
-    throw Error(`Failed downloading image ${url}, Error: ${e}`);
+    throw new ImageValidationError(
+      `Failed downloading image ${url}, Error: ${e}`,
+    );
   }
 
   if (!res.ok) {
-    throw new Error(
+    throw new ImageValidationError(
       `Non 200 response for url ${url}, status:${res.status} ${res.statusText}`,
     );
   }
   const contentType = res.headers.get("content-type");
   if (!contentType || !["image/png", "image/jpeg"].includes(contentType)) {
-    throw new Error(`Invalid content-type ${contentType} for url ${url}.`);
+    throw new ImageValidationError(
+      `Invalid content-type ${contentType} for url ${url}.`,
+    );
   }
 
   const arrayBuffer = await res.arrayBuffer();

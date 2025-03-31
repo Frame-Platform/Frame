@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { payloadSchema, TitanInputType } from "./types";
+import { ImageValidationError, payloadSchema, TitanInputType } from "./types";
 import { ZodError } from "zod";
 import { Client } from "pg";
 import dotenv from "dotenv";
@@ -31,8 +31,7 @@ export const handler = async (
     const textPayload = desc ? { inputText: desc } : {};
     const payload: TitanInputType = { ...imagePayload, ...textPayload };
 
-    const res = await callTitan(payload);
-    const embedding = res.embedding;
+    const { embedding } = await callTitan(payload);
 
     if (!pgClient) {
       pgClient = await pgConnect();
@@ -70,13 +69,13 @@ export const handler = async (
       return {
         statusCode: 400,
         body: JSON.stringify({
-          error: "Validation error",
+          error: "Zod Validation Error",
           details: errorMessages,
         }),
       };
     }
 
-    if (e instanceof Error) {
+    if (e instanceof ImageValidationError) {
       return {
         statusCode: 400,
         body: JSON.stringify({ error: e.message }),

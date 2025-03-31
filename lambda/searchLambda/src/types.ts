@@ -18,3 +18,5 @@ const titanInputSchema = z.object({
 });
 
 export type TitanInputType = z.infer<typeof titanInputSchema>;
+
+export class ImageValidationError extends Error {}
