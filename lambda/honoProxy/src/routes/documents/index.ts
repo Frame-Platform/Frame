@@ -1,5 +1,5 @@
 import { createRoute } from "@hono/zod-openapi";
-import { errorResponseSchema } from "../sharedSchemas";
+import { errorResponseSchema, apiKeySchema } from "../sharedSchemas";
 import { z } from "@hono/zod-openapi";
 import {
   idPathSchema,
@@ -12,7 +12,11 @@ import {
 export const getDocumentsRoute = createRoute({
   method: "get",
   path: "/document",
+  description: "Get a paginated list of documents",
   request: {
+    headers: z.object({
+      "x-api-key": apiKeySchema,
+    }),
     query: paginationSchema.describe("Pagination query parameters"),
     description:
       "Retrieve a paginated list of documents. Defaults to returning all documents unless limit/offset are provided.",
@@ -43,7 +47,7 @@ export const getDocumentsRoute = createRoute({
             ],
             limit: 2,
             offset: 0,
-            total: 25,
+            total: 2,
           },
         },
       },
@@ -53,6 +57,7 @@ export const getDocumentsRoute = createRoute({
       content: {
         "application/json": {
           schema: errorResponseSchema,
+          example: { error: "Internal Server Error." },
         },
       },
     },
@@ -62,7 +67,11 @@ export const getDocumentsRoute = createRoute({
 export const getDocumentByIdRoute = createRoute({
   method: "get",
   path: "/document/{id}",
+  description: "Find a document by an ID",
   request: {
+    headers: z.object({
+      "x-api-key": apiKeySchema,
+    }),
     params: idPathSchema.describe("Path parameter for document ID"),
     description:
       "Retrieve a document by its numeric ID. The ID must be a non-negative integer.",
@@ -86,10 +95,11 @@ export const getDocumentByIdRoute = createRoute({
       },
     },
     404: {
-      description: "Document not found",
+      description: "Document Not Found",
       content: {
         "application/json": {
           schema: errorResponseSchema,
+          example: { error: "Document Not Found" },
         },
       },
     },
@@ -98,6 +108,7 @@ export const getDocumentByIdRoute = createRoute({
       content: {
         "application/json": {
           schema: errorResponseSchema,
+          example: { error: "Internal Server Error." },
         },
       },
     },
@@ -107,7 +118,11 @@ export const getDocumentByIdRoute = createRoute({
 export const createDocumentRoute = createRoute({
   method: "post",
   path: "/document",
+  description: "Add new document(s)",
   request: {
+    headers: z.object({
+      "x-api-key": apiKeySchema,
+    }),
     body: {
       content: {
         "application/json": {
@@ -160,6 +175,7 @@ export const createDocumentRoute = createRoute({
       content: {
         "application/json": {
           schema: errorResponseSchema,
+          example: { error: "Internal Server Error." },
         },
       },
     },
@@ -169,7 +185,11 @@ export const createDocumentRoute = createRoute({
 export const deleteDocumentRoute = createRoute({
   method: "delete",
   path: "/document/{id}",
+  description: "Deleteing a document",
   request: {
+    headers: z.object({
+      "x-api-key": apiKeySchema,
+    }),
     params: idPathSchema.describe("Path parameter for document ID"),
     description:
       "Delete a document by its numeric ID. ID must be a non-negative integer.",
@@ -197,6 +217,7 @@ export const deleteDocumentRoute = createRoute({
       content: {
         "application/json": {
           schema: errorResponseSchema,
+          example: { error: "Document Not Found" },
         },
       },
     },
@@ -205,6 +226,7 @@ export const deleteDocumentRoute = createRoute({
       content: {
         "application/json": {
           schema: errorResponseSchema,
+          example: { error: "Internal Server Error." },
         },
       },
     },

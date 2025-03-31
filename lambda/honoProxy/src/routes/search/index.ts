@@ -4,13 +4,17 @@ import {
   searchMultipartSchema,
   searchResultSchema,
 } from "./schema";
-import { errorResponseSchema } from "../sharedSchemas";
+import { apiKeySchema, errorResponseSchema } from "../sharedSchemas";
 import { z } from "@hono/zod-openapi";
 
 export const searchRoute = createRoute({
   method: "post",
   path: "/search",
+  description: "Search for documents using an image or description",
   request: {
+    headers: z.object({
+      "x-api-key": apiKeySchema,
+    }),
     body: {
       content: {
         "application/json": {
@@ -33,6 +37,18 @@ export const searchRoute = createRoute({
             hits: searchResultSchema,
             count: z.number(),
           }),
+          example: {
+            hits: [
+              {
+                id: 171,
+                url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+                desc: "A monkey taking a selfie.",
+                timestamp: "2025-03-31T16:30:41.484Z",
+                score: 0.6692581354088997,
+              },
+            ],
+            count: 1,
+          },
         },
       },
     },
@@ -41,6 +57,7 @@ export const searchRoute = createRoute({
       content: {
         "application/json": {
           schema: errorResponseSchema,
+          example: { error: "Bad Request" },
         },
       },
     },
@@ -49,6 +66,7 @@ export const searchRoute = createRoute({
       content: {
         "application/json": {
           schema: errorResponseSchema,
+          example: { error: "Internal Server Error." },
         },
       },
     },
