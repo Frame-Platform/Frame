@@ -1,6 +1,9 @@
 import { z } from "@hono/zod-openapi";
-import { VALID_TYPES, MAX_SIZE } from "../sharedSchemas";
 import { baseDocumentSchema } from "../sharedSchemas";
+
+import { VALID_TYPES, MAX_SIZE } from "../sharedSchemas";
+const DEFAULT_PAGINATION_LIMIT = 20;
+const MAX_PAGINATION_LIMIT = 100;
 
 export const idPathSchema = z.object({
   id: z
@@ -20,14 +23,23 @@ export const documentReturnSchema = baseDocumentSchema.extend({
 });
 
 export const paginationSchema = z.object({
-  limit: z
-    .string()
-    .optional()
-    .transform((val) => (val ? parseInt(val, 10) : 1000000)),
-  offset: z
-    .string()
-    .optional()
-    .transform((val) => (val ? parseInt(val, 10) : 0)),
+  limit: z.coerce
+    .number()
+    .min(1, { message: "Limit must be at least 1." })
+    .max(MAX_PAGINATION_LIMIT, {
+      message: `Limit must not exceed ${MAX_PAGINATION_LIMIT}`,
+    })
+    .default(DEFAULT_PAGINATION_LIMIT)
+    .describe(
+      `Number of items to return (max ${MAX_PAGINATION_LIMIT}, default ${DEFAULT_PAGINATION_LIMIT})`,
+    ),
+  offset: z.coerce
+    .number()
+    .min(0, { message: "Offset must be 0 or greater." })
+    .default(0)
+    .describe(
+      "Number of items to skip before starting to collect the result set (default 0)",
+    ),
 });
 
 export const validateImageResultSchema = baseDocumentSchema.extend({

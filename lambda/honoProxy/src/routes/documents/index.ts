@@ -47,7 +47,7 @@ export const getDocumentsRoute = createRoute({
             ],
             limit: 2,
             offset: 0,
-            total: 25,
+            total: 2,
           },
         },
       },
