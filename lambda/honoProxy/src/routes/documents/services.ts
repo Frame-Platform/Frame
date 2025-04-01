@@ -12,8 +12,11 @@ export const pgGetDocuments = async (
     const pgClient = await pgConnect();
 
     const query = `
-            SELECT id, url, description FROM documents
-            ORDER BY id DESC LIMIT $1 OFFSET $2
+      SELECT id, url, description
+      FROM documents
+      ORDER BY id DESC
+      LIMIT $1
+      OFFSET $2
     `;
     const { rows } = await pgClient.query(query, [limit, offset]);
     return rows;
@@ -27,7 +30,9 @@ export const pgGetById = async (id: string | number) => {
     const pgClient = await pgConnect();
 
     const query = `
-             SELECT id, url, description FROM documents WHERE id = $1
+      SELECT id, url, description
+      FROM documents
+      WHERE id = $1;
     `;
 
     return await pgClient.query(query, [id]);
@@ -40,12 +45,9 @@ export const pgDeleteDocument = async (id: number) => {
   try {
     const pgClient = await pgConnect();
     const query = `
-      WITH deleted AS (
-        DELETE FROM documents
-        WHERE id = $1
-        RETURNING id, url, description
-      )
-      SELECT id, url, description AS desc FROM deleted;
+      DELETE FROM documents
+      WHERE id = $1
+      RETURNING id, url, description;
     `;
 
     return await pgClient.query(query, [id]);
@@ -72,7 +74,7 @@ export async function sendToSQS(images: ValidImageResult[]) {
       Id: (i + index).toString(),
       MessageBody: JSON.stringify({
         url: image.url,
-        desc: image.desc || null,
+        description: image.description || null,
         timestamp: new Date().toISOString(),
       }),
     }));
@@ -100,47 +102,16 @@ export async function sendToSQS(images: ValidImageResult[]) {
   return { Successful: successfulMessages, Failed: failedMessages };
 }
 
-// export async function sendToSQS(images: ValidImageResult[]) {
-//   const sqsClient = new SQSClient({ region: process.env.AWS_REGION });
-//   const validImages = images.filter((image) => image.success);
-
-//   if (validImages.length === 0) {
-//     return { Failed: [], Successful: [] };
-//   }
-
-//   const entries = validImages.map((image, index) => ({
-//     Id: index.toString(), // Unique identifier per batch message
-//     MessageBody: JSON.stringify({
-//       url: image.url,
-//       desc: image.desc || null,
-//       timestamp: new Date().toISOString(),
-//     }),
-//   }));
-
-//   const command = new SendMessageBatchCommand({
-//     QueueUrl: process.env.QUEUE_URL,
-//     Entries: entries,
-//   });
-
-//   try {
-//     const response = await sqsClient.send(command);
-//     return response; // Contains Successful and Failed fields
-//   } catch (error) {
-//     console.error("Error sending batch to SQS:", error);
-//     throw error;
-//   }
-// }
-
-export const validateImage = async ({ url, desc }: BaseDocumentType) => {
+export const validateImage = async ({ url, description }: BaseDocumentType) => {
   try {
-    if (!url) return { success: true, url, desc, errors: "" };
+    if (!url) return { success: true, url, description, errors: "" };
 
     const res = await fetch(url, { method: "HEAD" });
     if (!res.ok) {
       return {
         success: false,
         url,
-        desc,
+        description,
         errors: `Fetch error: Received ${res.status} status.`,
       };
     }
@@ -155,15 +126,15 @@ export const validateImage = async ({ url, desc }: BaseDocumentType) => {
 
     if (!parsed.success) {
       const errors = parsed.error.errors.map((e) => e.message).join(", ");
-      return { success: false, url, desc, errors };
+      return { success: false, url, description, errors };
     }
 
-    return { success: true, url, desc };
+    return { success: true, url, description };
   } catch (e: unknown) {
     const errorMessage =
       e instanceof Error
         ? e.message
         : "Unknown error occurred during validation.";
-    return { success: false, url, desc, errors: errorMessage };
+    return { success: false, url, description, errors: errorMessage };
   }
 };

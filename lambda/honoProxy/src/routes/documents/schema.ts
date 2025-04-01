@@ -16,11 +16,12 @@ export const idPathSchema = z.object({
 });
 
 export const documentSchema = baseDocumentSchema.refine(
-  (data) => data.url || data.desc,
+  (data) => data.url || data.description,
   {
-    message: "At least one of url or desc must be provided.",
+    message: "At least one of url or description must be provided.",
   },
 );
+
 export const documentReturnSchema = baseDocumentSchema.extend({
   id: z.number(),
 });

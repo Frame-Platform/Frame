@@ -89,9 +89,13 @@ export const pgConnect = async () => {
 };
 
 /*
+let pgClient: null | Client = null;
+
 export const pgConnect = async () => {
   try {
-    const pgClient = new Client({
+    if (pgClient) return pgClient;
+
+    pgClient = new Client({
       host: process.env.HOST_NAME,
       port: Number(process.env.PORT) || 5432,
       database: process.env.DB_NAME,

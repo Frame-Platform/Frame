@@ -11,7 +11,7 @@ export const errorResponseSchema = z.object({
 
 export const baseDocumentSchema = z.object({
   url: z.string().url({ message: "Invalid URL format" }).optional().nullable(),
-  desc: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
 });
 export type BaseDocumentType = z.infer<typeof baseDocumentSchema>;
 
@@ -38,3 +38,17 @@ export const DatabaseCredentialsSchema = z.object({
 });
 
 export type DatabaseCredentials = z.infer<typeof DatabaseCredentialsSchema>;
+
+const zodIssueSchema = z.object({
+  code: z.string(),
+  expected: z.any().optional(),
+  received: z.any().optional(),
+  path: z.array(z.union([z.string(), z.number()])),
+  message: z.string(),
+});
+
+export const zodErrorResponseSchema = z.object({
+  name: z.literal("ZodError"),
+  issues: z.array(zodIssueSchema),
+});
+

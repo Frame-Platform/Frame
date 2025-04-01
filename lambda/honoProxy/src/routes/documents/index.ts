@@ -1,5 +1,9 @@
 import { createRoute } from "@hono/zod-openapi";
-import { errorResponseSchema, apiKeySchema } from "../sharedSchemas";
+import {
+  errorResponseSchema,
+  apiKeySchema,
+  zodErrorResponseSchema,
+} from "../sharedSchemas";
 import { z } from "@hono/zod-openapi";
 import {
   idPathSchema,
@@ -8,6 +12,7 @@ import {
   documentReturnSchema,
   documentSchema,
 } from "./schema";
+import { ZodError } from "zod";
 
 export const getDocumentsRoute = createRoute({
   method: "get",
@@ -18,8 +23,11 @@ export const getDocumentsRoute = createRoute({
       "x-api-key": apiKeySchema,
     }),
     query: paginationSchema.describe("Pagination query parameters"),
-    description:
-      "Retrieve a paginated list of documents. Defaults to returning all documents unless limit/offset are provided.",
+    description: "Retrieve a paginated list of documents.",
+    example: {
+      limit: 10,
+      offset: 20,
+    },
   },
   responses: {
     200: {
@@ -30,25 +38,33 @@ export const getDocumentsRoute = createRoute({
             documents: z.array(documentReturnSchema),
             limit: z.number(),
             offset: z.number(),
-            total: z.number(),
+            count: z.number(),
           }),
           example: {
             documents: [
               {
                 id: 1,
                 url: "https://example.com/pic1.png",
-                desc: "First image",
+                description: "First image",
               },
               {
                 id: 2,
                 url: "https://example.com/pic2.png",
-                desc: "Second image",
+                description: "Second image",
               },
             ],
             limit: 2,
             offset: 0,
-            total: 2,
+            count: 2,
           },
+        },
+      },
+    },
+    400: {
+      description: "Bad Request",
+      content: {
+        "application/json": {
+          schema: zodErrorResponseSchema,
         },
       },
     },
@@ -72,7 +88,8 @@ export const getDocumentByIdRoute = createRoute({
     headers: z.object({
       "x-api-key": apiKeySchema,
     }),
-    params: idPathSchema.describe("Path parameter for document ID"),
+    params: idPathSchema.describe("A unique identifier for the document."),
+    example: "123",
     description:
       "Retrieve a document by its numeric ID. The ID must be a non-negative integer.",
   },
@@ -88,9 +105,17 @@ export const getDocumentByIdRoute = createRoute({
             document: {
               id: 7,
               url: "https://example.com/monkeyselfie.jpeg",
-              desc: "An image of monkey takign a selfie.",
+              description: "An image of monkey takign a selfie.",
             },
           },
+        },
+      },
+    },
+    400: {
+      description: "Bad Request",
+      content: {
+        "application/json": {
+          schema: zodErrorResponseSchema,
         },
       },
     },
@@ -131,10 +156,10 @@ export const createDocumentRoute = createRoute({
             images: [
               {
                 url: "https://example.com/image1.jpg",
-                desc: "A photo of the Colosseum in Rome",
+                description: "A photo of the Colosseum in Rome",
               },
               {
-                desc: "An image with no URL, only a description",
+                description: "An image with no URL, only a description",
               },
             ],
           },
@@ -153,20 +178,28 @@ export const createDocumentRoute = createRoute({
           example: [
             {
               url: "https://example.com/image1.jpg",
-              desc: "A photo of the Colosseum in Rome",
+              description: "A photo of the Colosseum in Rome",
               success: true,
             },
             {
-              desc: "An image with no URL, only a description",
+              description: "An image with no URL, only a description",
               success: true,
             },
             {
               url: null,
-              desc: null,
+              description: null,
               success: false,
-              errors: "At least one of url or desc must be provided.",
+              errors: "At least one of url or description must be provided.",
             },
           ],
+        },
+      },
+    },
+    400: {
+      description: "Bad Request",
+      content: {
+        "application/json": {
+          schema: zodErrorResponseSchema,
         },
       },
     },
@@ -190,7 +223,8 @@ export const deleteDocumentRoute = createRoute({
     headers: z.object({
       "x-api-key": apiKeySchema,
     }),
-    params: idPathSchema.describe("Path parameter for document ID"),
+    params: idPathSchema.describe("A unique identifier for the document."),
+    example: "123",
     description:
       "Delete a document by its numeric ID. ID must be a non-negative integer.",
   },
@@ -206,9 +240,17 @@ export const deleteDocumentRoute = createRoute({
             document: {
               id: 42,
               url: "https://example.com/resource.pdf",
-              desc: "A sample document",
+              description: "A sample document",
             },
           },
+        },
+      },
+    },
+    400: {
+      description: "Bad Request",
+      content: {
+        "application/json": {
+          schema: zodErrorResponseSchema,
         },
       },
     },

@@ -26,7 +26,7 @@ export const getDocumentsHandler: RouteHandler<
         documents,
         limit,
         offset,
-        total: documents.length,
+        count: documents.length,
       },
       200,
     );
@@ -77,7 +77,7 @@ export const createDocumentHandler: RouteHandler<
 
       return {
         url: image.url,
-        desc: image.desc,
+        description: image.description,
         success: !!successEntry,
         errors: failedEntry ? failedEntry.Message || "Unknown Error" : "",
       };
