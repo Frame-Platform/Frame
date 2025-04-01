@@ -8,7 +8,7 @@ import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
 import { z } from "@hono/zod-openapi";
 
 export const deleteImageFromS3 = async (key: string) => {
-  const bucketName = process.env.TEMP_BUCKET;
+  const bucketName = process.env.IMAGE_BUCKET_NAME;
   const s3Client = new S3Client({ region: process.env.AWS_REGION });
 
   console.log(`Deleting S3 image: ${key}`);
@@ -26,7 +26,7 @@ export const deleteImageFromS3 = async (key: string) => {
 export const uploadImageToS3 = async (image: File) => {
   const key = image.name.trim();
   const region = process.env.AWS_REGION;
-  const bucketName = process.env.TEMP_BUCKET;
+  const bucketName = process.env.IMAGE_BUCKET_NAME;
   try {
     const s3Client = new S3Client({ region });
 
@@ -50,19 +50,19 @@ export const uploadImageToS3 = async (image: File) => {
 };
 
 export const invokeSearchLambda = async (
-  message: z.infer<typeof searchJSONSchema>,
+  message: z.infer<typeof searchJSONSchema>
 ) => {
   try {
     const lambdaClient = new LambdaClient({ region: process.env.AWS_REGION });
     const command = new InvokeCommand({
-      FunctionName: "searchLambda",
+      FunctionName: process.env.SEARCH_LAMBDA_ARN /*"searchLambda"*/,
       InvocationType: "RequestResponse",
       Payload: Buffer.from(JSON.stringify(message)),
     });
     const res = await lambdaClient.send(command);
     if (res.StatusCode !== 200) {
       throw new Error(
-        `Lambda invocation failed with status code: ${res.StatusCode}`,
+        `Lambda invocation failed with status code: ${res.StatusCode}`
       );
     }
 
@@ -80,7 +80,7 @@ export const invokeSearchLambda = async (
 
     if (lambdaResponse.statusCode !== 200) {
       throw new Error(
-        `Non 200 response from searchLambda, status code: ${res.StatusCode}`,
+        `Non 200 response from searchLambda, status code: ${res.StatusCode}`
       );
     }
 

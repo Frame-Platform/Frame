@@ -6,7 +6,7 @@ import { BaseDocumentType } from "../sharedSchemas";
 
 export const pgGetDocuments = async (
   limit: number, // default limit is 1mil, default offset is 0 => returns all
-  offset: number,
+  offset: number
 ) => {
   try {
     const pgClient = await pgConnect();
@@ -78,7 +78,7 @@ export async function sendToSQS(images: ValidImageResult[]) {
     }));
 
     const command = new SendMessageBatchCommand({
-      QueueUrl: process.env.QUEUE_URL,
+      QueueUrl: process.env.DOCUMENT_QUEUE_URL,
       Entries: entries,
     });
 
@@ -92,7 +92,7 @@ export async function sendToSQS(images: ValidImageResult[]) {
         ...entries.map((entry) => ({
           Id: entry.Id,
           Message: error instanceof Error ? error.message : "Unknown error",
-        })),
+        }))
       );
     }
   }

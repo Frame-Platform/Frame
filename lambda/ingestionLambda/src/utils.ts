@@ -5,19 +5,79 @@ import {
 import { Client } from "pg";
 import dotenv from "dotenv";
 import sharp from "sharp";
-import { TitanInputType } from "./types";
-const AWS_REGION = "us-east-1";
-const EMBEDDING_MODEL = "amazon.titan-embed-image-v1";
+import {
+  TitanInputType,
+  DatabaseCredentials,
+  DatabaseCredentialsSchema,
+} from "./types";
+import {
+  SecretsManagerClient,
+  GetSecretValueCommand,
+  GetSecretValueCommandOutput,
+} from "@aws-sdk/client-secrets-manager";
+import { z } from "zod" /*"@hono/zod-openapi"*/;
+
 dotenv.config();
+
+// Function to retrieve and parse database credentials
+const getDatabaseCredentials = async (
+  secretName: string,
+  region: string
+): Promise<DatabaseCredentials> => {
+  const client = new SecretsManagerClient({
+    region: region,
+  });
+
+  try {
+    const response: GetSecretValueCommandOutput = await client.send(
+      new GetSecretValueCommand({
+        SecretId: secretName,
+        VersionStage: "AWSCURRENT",
+      })
+    );
+
+    if (!response.SecretString) {
+      throw new Error("Secret value is empty");
+    }
+
+    const parsedData = JSON.parse(response.SecretString);
+    const credentials = DatabaseCredentialsSchema.parse(parsedData);
+    return credentials;
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      console.error("Database credentials validation failed:", error.errors);
+      throw new Error("Database credentials format is invalid");
+    } else if (error instanceof Error) {
+      console.error(`Error retrieving database credentials: ${error.message}`);
+    } else {
+      console.error(
+        "Unknown error occurred while retrieving database credentials"
+      );
+    }
+    throw error;
+  }
+};
 
 export const pgConnect = async () => {
   try {
+    let dbCredentials;
+
+    try {
+      const SECRET_NAME =
+        process.env.DATABASE_SECRET_ARN || "StorageStack-db-credentials";
+      const REGION = process.env.AWS_REGION || "us-east-1";
+      dbCredentials = await getDatabaseCredentials(SECRET_NAME, REGION);
+    } catch (error) {
+      console.error("Failed to retrieve database credentials:", error);
+      throw new Error("Could not retrieve database credentials");
+    }
+
     const pgClient = new Client({
-      host: process.env.HOST_NAME,
-      port: Number(process.env.PORT) || 5432,
-      database: process.env.DB_NAME,
-      user: process.env.POSTGRES_USER,
-      password: process.env.POSTGRES_PASSWORD,
+      host: process.env.DATABASE_HOST,
+      port: Number(process.env.DATABASE_PORT) || 5432,
+      database: process.env.DATABASE_NAME,
+      user: dbCredentials.username,
+      password: dbCredentials.password,
       ssl: {
         rejectUnauthorized: false,
       },
@@ -26,7 +86,7 @@ export const pgConnect = async () => {
     await pgClient.connect();
     return pgClient;
   } catch (e) {
-    throw new Error(`Error connecting to database: ${e}`);
+    throw new Error(`Error connecting to Postgres`);
   }
 };
 
@@ -104,9 +164,11 @@ export const resizeImageToLimit = async (
 
 export const callTitan = async (payload: TitanInputType) => {
   try {
-    const bedrockClient = new BedrockRuntimeClient({ region: AWS_REGION });
+    const bedrockClient = new BedrockRuntimeClient({
+      region: process.env.AWS_REGION,
+    });
     const command = new InvokeModelCommand({
-      modelId: EMBEDDING_MODEL,
+      modelId: process.env.BEDROCK_MODEL_ID,
       contentType: "application/json",
       accept: "application/json",
       body: JSON.stringify(payload),
