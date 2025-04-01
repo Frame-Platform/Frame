@@ -24,5 +24,7 @@ let client = new Client({ apiKey: API_KEY, baseURL: BASE_URL });
 // testMethod(client.getDocuments({ offset: "-2" })); // Negative Offset
 // testMethod(client.getDocuments({ offset: false as any as string })); // Non-number Offset
 
+// Valid
+testMethod(client.getDocumentById(1 as any as string));
 /*  DELETE docs test */
 // api.callDeleteDocById() id string needed
