@@ -1,12 +1,19 @@
 import { pgConnect } from "../../db";
-import { SQSClient } from "@aws-sdk/client-sqs";
-import { SendMessageBatchCommand } from "@aws-sdk/client-sqs";
-import { imageResponseSchema, ValidImageResult } from "./schema";
+import {
+  SQSClient,
+  SQSServiceException,
+  SendMessageBatchCommand,
+} from "@aws-sdk/client-sqs";
+
+import { imageResponseSchema, ValidDocResult } from "./schema";
 import { BaseDocumentType } from "../sharedSchemas";
+import { Instance } from "aws-cdk-lib/aws-ec2";
+
+const SQS_BATCH_SIZE = 10; //AWS Max = 10
 
 export const pgGetDocuments = async (
   limit: number, // default limit is 1mil, default offset is 0 => returns all
-  offset: number
+  offset: number,
 ) => {
   try {
     const pgClient = await pgConnect();
@@ -56,50 +63,75 @@ export const pgDeleteDocument = async (id: number) => {
   }
 };
 
-export async function sendToSQS(images: ValidImageResult[]) {
+const formatResult = (
+  success: boolean,
+  errors: string | null | undefined,
+  doc: BaseDocumentType,
+) => ({
+  success,
+  ...(errors && { errors }),
+  ...(doc?.url && { url: doc.url }),
+  ...(doc?.description && { description: doc.description }),
+});
+
+export async function sendToSQS(documents: BaseDocumentType[]) {
   const sqsClient = new SQSClient({ region: process.env.AWS_REGION });
-  const validImages = images.filter((image) => image.success);
 
-  if (validImages.length === 0) {
-    return { Failed: [], Successful: [] };
-  }
-
-  const chunkSize = 10;
-  const successfulMessages: any[] = [];
-  const failedMessages: any[] = [];
-
-  for (let i = 0; i < validImages.length; i += chunkSize) {
-    const batch = validImages.slice(i, i + chunkSize);
+  const batches = [];
+  for (let i = 0; i < documents.length; i += SQS_BATCH_SIZE) {
+    const batch = documents.slice(i, i + SQS_BATCH_SIZE);
     const entries = batch.map((image, index) => ({
-      Id: (i + index).toString(),
+      Id: String(i + index),
       MessageBody: JSON.stringify({
         url: image.url,
         description: image.description || null,
         timestamp: new Date().toISOString(),
       }),
     }));
+    batches.push(entries);
+  }
 
-    const command = new SendMessageBatchCommand({
-      QueueUrl: process.env.QUEUE_URL,
-      Entries: entries,
-    });
-
+  const docSendResult: ValidDocResult[] = [];
+  for (const entries of batches) {
     try {
-      const response = await sqsClient.send(command);
-      successfulMessages.push(...(response.Successful || []));
-      failedMessages.push(...(response.Failed || []));
+      const command = new SendMessageBatchCommand({
+        QueueUrl: process.env.QUEUE_URL,
+        Entries: entries,
+      });
+
+      const { Successful, Failed } = await sqsClient.send(command);
+
+      if (Successful) {
+        Successful.forEach((entry) => {
+          const doc = documents[Number(entry.Id)];
+          docSendResult.push(formatResult(true, null, doc));
+        });
+      }
+
+      if (Failed) {
+        Failed.forEach((entry) => {
+          const doc = documents[Number(entry.Id)];
+          docSendResult.push(
+            formatResult(false, entry.Message || "Unknown Error", doc),
+          );
+        });
+      }
     } catch (error) {
       console.error("Error sending batch to SQS:", error);
-      failedMessages.push(
-        ...entries.map((entry) => ({
-          Id: entry.Id,
-          Message: error instanceof Error ? error.message : "Unknown error",
-        }))
-      );
+
+      let errorMessage = "Unknown Server Error";
+      if (error instanceof SQSServiceException) {
+        errorMessage = error.message;
+      }
+
+      entries.forEach((entry) => {
+        const doc = documents[Number(entry.Id)];
+        docSendResult.push(formatResult(false, errorMessage, doc));
+      });
     }
   }
 
-  return { Successful: successfulMessages, Failed: failedMessages };
+  return docSendResult;
 }
 
 export const validateImage = async ({ url, description }: BaseDocumentType) => {
