@@ -43,7 +43,10 @@ export const searchRoute = createRoute({
         "Search the database using an image, a description, or both, with optional parameters to fine-tune the results.\n\n" +
         "For JSON requests:\n" +
         "- The request body must include either a `url` pointing to an image, a `description` string, or both.\n" +
-        "- If both are provided, each will be encoded and compared independently using cosine similarity.\n\n" +
+        "- If both are provide both will be encoded and compared independently using cosine similarity.\n\n" +
+        "- Accepted image types: " +
+        VALID_IMAGE_TYPES.join(", ") +
+        ".\n" +
         "For multipart/form-data requests:\n" +
         "- You must provide either an uploaded image file (`image`) or a `description` or both.\n" +
         "- Accepted image types: " +
