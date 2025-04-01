@@ -92,6 +92,11 @@ export async function deployCommand(options: any) {
     if (apiKeyMatch && apiKeyMatch[1]) {
       apiKeyId = apiKeyMatch[1];
     }
+    console.log(
+      chalk.white.yellow(
+        "Before proceeding to use the SDK, please ensure that you have allowed access to Amazon Bedrock Foundation Models in the AWS console. Details of how to do so can be found in the README.md file associated with the CLI.\n"
+      )
+    );
     console.log(chalk.white.bold("API Information:"));
     console.log(chalk.white("API Endpoint:"), chalk.cyan(apiEndpoint));
     console.log(chalk.white("API Key ID:"), chalk.cyan(apiKeyId));
@@ -108,16 +113,16 @@ export async function deployCommand(options: any) {
     );
     console.log(
       chalk.yellow(`
-        import { DocumentEmbeddingClient } from 'document-embedding-sdk';
+import { DocumentEmbeddingClient } from 'document-embedding-sdk';
 
-        const client = new DocumentEmbeddingClient({
-          endpoint: '${apiEndpoint || "YOUR_API_ENDPOINT"}',
-          apiKey: '${apiKeyId || "YOUR_API_KEY"}'
-        });
+const client = new DocumentEmbeddingClient({
+  endpoint: '${apiEndpoint || "YOUR_API_ENDPOINT"}',
+  apiKey: '${apiKeyId || "YOUR_API_KEY"}'
+});
       `)
     );
   } catch (error) {
-    console.error(chalk.red("\n❌ Deployment failed:"));
+    console.error(chalk.red("\nDeployment failed:"));
     console.error(
       chalk.red(error instanceof Error ? error.message : String(error))
     );

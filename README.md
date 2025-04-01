@@ -72,7 +72,21 @@ After successful deployment, verify that all components are working correctly:
 - Check the AWS Management Console to confirm resources have been created.
 - Test the image embedding functionality by uploading a sample image via our SDK client.
 
-### Step 6 (if relevant and necessary): Destroy the Infrastructure
+### Step 6: Add AWS Access to Amazon Bedrock Foundation Models
+
+Current details of how to do this can be found here: https://docs.aws.amazon.com/bedrock/latest/userguide/model-access-modify.html
+
+At the time of writing, you will need to:
+
+- Make sure you have permission to request access, or modify access, to Amazon Bedrock foundation models.
+- Navigate to the Amazon Bedrock console in your AWS account.
+- In the left navigation pane, under Bedrock configurations, choose Model access.
+- Select 'Enable Specific Models':
+  - Select the models that you want the account to have access to and unselect the models that you don't want the account to have access to. In this case, we need the model to have access to the Amazon Titan Multimodal Embeddings G1 model so select the check box next to this model.
+- Select 'Next' then 'Submit'.
+- It may take several minutes to receive or remove access to models but, once access is granted, you should see 'Access granted' next to the model name.
+
+### Step 7 (if relevant and necessary): Destroy the Infrastructure
 
 When you no longer need the image-embedding pipeline, you can remove all deployed resources with `document-embedding destroy`.
 

@@ -80,7 +80,7 @@ export async function sendToSQS(images: ValidImageResult[]) {
     }));
 
     const command = new SendMessageBatchCommand({
-      QueueUrl: process.env.QUEUE_URL,
+      QueueUrl: process.env.DOCUMENT_QUEUE_URL,
       Entries: entries,
     });
 
