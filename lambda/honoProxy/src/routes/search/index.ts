@@ -13,11 +13,11 @@ import {
 } from "../sharedSchemas";
 
 import { z } from "@hono/zod-openapi";
-import { truncate } from "fs/promises";
 
 export const searchRoute = createRoute({
   method: "post",
   path: "/search",
+  tags: ["documents"],
   description: "Search for documents using an image or description",
   request: {
     headers: z.object({

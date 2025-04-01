@@ -12,10 +12,10 @@ import {
   documentReturnSchema,
   documentSchema,
 } from "./schema";
-import { ZodError } from "zod";
 
 export const getDocumentsRoute = createRoute({
   method: "get",
+  tags: ["documents"],
   path: "/document",
   description: "Get a paginated list of documents",
   request: {
@@ -83,6 +83,7 @@ export const getDocumentsRoute = createRoute({
 export const getDocumentByIdRoute = createRoute({
   method: "get",
   path: "/document/{id}",
+  tags: ["documents"],
   description: "Find a document by an ID",
   request: {
     headers: z.object({
@@ -143,6 +144,7 @@ export const getDocumentByIdRoute = createRoute({
 export const createDocumentRoute = createRoute({
   method: "post",
   path: "/document",
+  tags: ["documents"],
   description: "Add new document(s)",
   request: {
     headers: z.object({
@@ -218,6 +220,7 @@ export const createDocumentRoute = createRoute({
 export const deleteDocumentRoute = createRoute({
   method: "delete",
   path: "/document/{id}",
+  tags: ["documents"],
   description: "Deleteing a document",
   request: {
     headers: z.object({
