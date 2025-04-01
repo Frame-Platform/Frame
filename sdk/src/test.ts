@@ -1,27 +1,28 @@
-import * as SDKTypes from "./types";
 import dotenv from "dotenv";
-import { Client } from './index';
+import { Client } from "./index";
 
-dotenv.config()
+dotenv.config();
 
-const API_KEY = process.env.API_KEY || '';
+const BASE_URL = process.env.BASE_URL || "";
+const API_KEY = process.env.API_KEY || "";
 
-let api = new Client({ apiKey: API_KEY });
+const testMethod = async (res) => {
+  const apiRes = await res;
+  console.log(apiRes);
+};
+let client = new Client({ apiKey: API_KEY, baseURL: BASE_URL });
+
 /*  Valid  */
-// api.getDocuments({ limit: '1', offset: '1' }); // Request with valid query params limit and offset, should return properly
-// api.getDocuments({ limit: '3' }); // Request with valid limit and NO OFFSET argument
-// api.getDocuments({ offset: '1 '}); // Request with valid offset argument and NO LIMIT
-// api.getDocuments(); // Request with no arguments
+// testMethod(client.getDocuments({ limit: "1", offset: "1" })); // Limit + Offset
+// testMethod(client.getDocuments({ limit: "3" })); // Just Limit
+// testMethod(client.getDocuments({ offset: "1 " })); // Just Offset
+// testMethod(client.getDocuments()); // No Optional
 
 /* Invalid */
-// api.getDocuments({ 'limit': '-2' }); // when limit is negative,  message: 'Limit must be at least 1.'
-// api.getDocuments({ limit: false as any as string });   COME BACK TO / FIX ON SERVER SIDE
-// api.getDocuments({ 'offset': '-2' }); // when offset is negative,  message: 'Limit must be at least 1.'
-// api.getDocuments({ 'offset': false as any as string }); // COME BACK TO / FIX ON SERVER SIDE
-
-
-
-
+// testMethod(client.getDocuments({ limit: "-2" })); // Negative Limit
+// testMethod(client.getDocuments({ limit: false as any as string })); // Non-number Limit
+// testMethod(client.getDocuments({ offset: "-2" })); // Negative Offset
+// testMethod(client.getDocuments({ offset: false as any as string })); // Non-number Offset
 
 /*  DELETE docs test */
 // api.callDeleteDocById() id string needed
