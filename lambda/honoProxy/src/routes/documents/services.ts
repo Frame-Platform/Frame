@@ -91,8 +91,14 @@ export async function sendToSQS(documents: BaseDocumentType[]) {
     batches.push(entries);
   }
 
+
   const docSendResult: ValidDocResult[] = [];
   for (const entries of batches) {
+    const command = new SendMessageBatchCommand({
+      QueueUrl: process.env.DOCUMENT_QUEUE_URL,
+      Entries: entries,
+    });
+
     try {
       const command = new SendMessageBatchCommand({
         QueueUrl: process.env.QUEUE_URL,

@@ -1,24 +1,44 @@
+export interface ClientConfig {
+  apiKey: string;
+  baseURL: string;
+}
+
+/*     GET /document     */
+
 export interface Document {
-  url: string,
-  desc?: string,
+  id: number;
+  url: string;
+  desc?: string;
 }
 
 export interface Documents {
-  documents: Document[]
+  documents: Document[];
 }
 
-export interface GetDocsParameter {
-  limit: string,
-  offset: string,
+export interface GetDocumentsParams {
+  limit?: string;
+  offset?: string;
 }
 
 export interface GetDocsReturn {
-  documents: Documents,
-  limit: number,
-  offset: number,
-  total: number,
+  documents: Documents;
+  limit: number;
+  offset: number;
+  total: number;
 }
 
+/*     POST /document     */
+export interface PostImageSuccess {
+  url?: string;
+  desc?: string;
+  success: boolean;
+  errors: string;
+}
+export interface PostImagesSuccess {
+  documents: PostImageSuccess[];
+}
+
+/*     GET /document/${id}     */
 export interface DocumentResponse {
   document: {
     id: string;
@@ -36,6 +56,8 @@ export interface DocumentsResponse {
   total: number;
 }
 
+/*     GET /delete/${id}    current ?           */
+/*     GET /document/${id}   <<<<  outdated ?   */
 export interface DeleteDocumentResponse {
   document: {
     url: string;
@@ -44,4 +66,22 @@ export interface DeleteDocumentResponse {
   };
   success: boolean;
   message: string;
+}
+
+/*     POST /search     */
+export interface SearchReturn {
+  hits: {
+    url: string;
+    desc: string;
+    id: number;
+    timestamp: string;
+    score: number;
+  }[];
+  count: number;
+}
+
+export interface APIResponse {
+  status: number;
+  ok: boolean;
+  data: any;
 }

@@ -27,6 +27,18 @@ export const apiKeySchema = z.string().openapi({
   },
 });
 
+export const DatabaseCredentialsSchema = z.object({
+  password: z.string(),
+  dbname: z.string(),
+  engine: z.string(),
+  port: z.number(),
+  dbInstanceIdentifier: z.string(),
+  host: z.string(),
+  username: z.string(),
+});
+
+export type DatabaseCredentials = z.infer<typeof DatabaseCredentialsSchema>;
+
 const zodIssueSchema = z.object({
   code: z.string(),
   expected: z.any().optional(),
@@ -39,3 +51,4 @@ export const zodErrorResponseSchema = z.object({
   name: z.literal("ZodError"),
   issues: z.array(zodIssueSchema),
 });
+

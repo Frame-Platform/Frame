@@ -30,7 +30,7 @@ export class StorageStack extends cdk.Stack {
     // Get database credentials from environment variables
     const dbUsername = process.env.POSTGRES_USER || "postgres";
     const dbPassword = process.env.POSTGRES_PASSWORD || "fallback";
-    const dbName = process.env.POSTGRES_DB_NAME || "fallback";
+    const dbName = process.env.POSTGRES_DB_NAME || "postgres";
 
     /*
     // Validate that required environment variables are set
@@ -138,6 +138,7 @@ export class StorageStack extends cdk.Stack {
         // and then providing the generated password to the user after the fact.
         password: cdk.SecretValue.unsafePlainText(dbPassword),
       }),
+      databaseName: dbName,
       // Database configuration
       securityGroups: [dbSecurityGroup],
       // Deletion protection enabled for development i.e. database can be deleted when redeployed
