@@ -8,7 +8,7 @@ import { z } from "@hono/zod-openapi";
 import {
   idPathSchema,
   paginationSchema,
-  validateImageResultSchema,
+  validateDocResultSchema,
   documentReturnSchema,
   documentSchema,
 } from "./schema";
@@ -151,9 +151,9 @@ export const createDocumentRoute = createRoute({
     body: {
       content: {
         "application/json": {
-          schema: z.object({ images: z.array(documentSchema) }),
+          schema: z.object({ documents: z.array(documentSchema) }),
           example: {
-            images: [
+            documents: [
               {
                 url: "https://example.com/image1.jpg",
                 description: "A photo of the Colosseum in Rome",
@@ -174,7 +174,7 @@ export const createDocumentRoute = createRoute({
       description: "Validation results of images.",
       content: {
         "application/json": {
-          schema: z.array(validateImageResultSchema),
+          schema: z.array(validateDocResultSchema),
           example: [
             {
               url: "https://example.com/image1.jpg",

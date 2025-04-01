@@ -1,5 +1,5 @@
 import { RouteHandler } from "@hono/zod-openapi";
-
+import { partition } from "../utils";
 import {
   createDocumentRoute,
   deleteDocumentRoute,
@@ -59,31 +59,22 @@ export const createDocumentHandler: RouteHandler<
   typeof createDocumentRoute
 > = async (c) => {
   try {
-    const { images } = c.req.valid("json");
+    const { documents } = c.req.valid("json");
+    const [descOnlyDocuments, urlDocuments] = partition(
+      documents,
+      ({ url, description }) => !!(!url && description),
+    );
 
-    const validatedImages = await Promise.all(images.map(validateImage));
-    const sqsResults = await sendToSQS(validatedImages);
+    const validatedImages = await Promise.all(urlDocuments.map(validateImage));
+    const [validImages, invalidImages] = partition(
+      validatedImages,
+      (doc) => doc.success,
+    );
 
-    const successfulMessages = sqsResults.Successful || [];
-    const failedMessages = sqsResults.Failed || [];
+    const validDocuments = [...descOnlyDocuments, ...validImages];
+    const sqsResults = await sendToSQS(validDocuments);
 
-    const messageStatuses = validatedImages.map((image, index) => {
-      const successEntry = successfulMessages.find(
-        (msg) => msg.Id === index.toString(),
-      );
-      const failedEntry = failedMessages.find(
-        (msg) => msg.Id === index.toString(),
-      );
-
-      return {
-        url: image.url,
-        description: image.description,
-        success: !!successEntry,
-        errors: failedEntry ? failedEntry.Message || "Unknown Error" : "",
-      };
-    });
-
-    return c.json(messageStatuses, 200);
+    return c.json([...sqsResults, ...invalidImages], 200);
   } catch (e) {
     console.log(`Error in createDocumentHandler: ${e}`);
     return c.json({ error: "Internal Server Error." }, 500);

@@ -46,12 +46,12 @@ export const paginationSchema = z.object({
     ),
 });
 
-export const validateImageResultSchema = baseDocumentSchema.extend({
+export const validateDocResultSchema = baseDocumentSchema.extend({
   success: z.boolean(),
   errors: z.string().optional(),
 });
 
-export type ValidImageResult = z.infer<typeof validateImageResultSchema>;
+export type ValidDocResult = z.infer<typeof validateDocResultSchema>;
 
 export const imageResponseSchema = z.object({
   contentType: z.string().refine((val) => VALID_IMAGE_TYPES.includes(val), {
