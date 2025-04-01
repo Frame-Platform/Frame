@@ -7,14 +7,10 @@ import {
 
 import { imageResponseSchema, ValidDocResult } from "./schema";
 import { BaseDocumentType } from "../sharedSchemas";
-import { Instance } from "aws-cdk-lib/aws-ec2";
 
 const SQS_BATCH_SIZE = 10; //AWS Max = 10
 
-export const pgGetDocuments = async (
-  limit: number, // default limit is 1mil, default offset is 0 => returns all
-  offset: number,
-) => {
+export const pgGetDocuments = async (limit: number, offset: number) => {
   try {
     const pgClient = await pgConnect();
 
@@ -90,7 +86,6 @@ export async function sendToSQS(documents: BaseDocumentType[]) {
     }));
     batches.push(entries);
   }
-
 
   const docSendResult: ValidDocResult[] = [];
   for (const entries of batches) {
