@@ -6,231 +6,128 @@ dotenv.config()
 const BASE_URL = "https://lyy24w2m32.execute-api.us-east-1.amazonaws.com/testStage";
 const API_KEY = process.env.API_KEY || '';
 
-async function callGetDocuments(
-  {limit, offset} : SDKTypes.GetDocsParameter
-) {
-  let desiredFormat = {
-    "documents": [],
-      "limit": limit,
-      "offset": offset,
-      "total": limit,
-  };
-
-  try {
-    const response = await fetch(`${BASE_URL}/document`, {
-      headers: {
-        "x-api-key": API_KEY,
-      }
-    })
-
-    if (!response.ok) {
-      throw new Error(`Response status: ${response.status} - ${response.statusText}`);
-    }
-
-    const json = await response.json();
-    desiredFormat.documents = json.documents.slice(offset).slice(0, limit);
-
-    console.log(desiredFormat)
-    return desiredFormat;
-
-  } catch (error: unknown) {
-    console.error("Error in callGetById:", error);
-    throw new Error(`Error fetching documents: ${error instanceof Error ? error.message : error}`);
-  }
-}
-
-/*
-Tests
-callGetDocuments({ limit: '1', offset: '10'});
-callGetDocuments({ limit: '3', offset: '2'});
-callGetDocuments({ limit: '5', offset: '5'});
-*/
-
-
-async function callPostImagesForEmbedding() { // no parameters
-
-}
-/*
-Test
-call();
-*/
-
-
-
-async function callGetDocById(id: string): Promise<SDKTypes.DocumentResponse> {
-  if (!id) {
-    throw new Error("Document ID is required");
-  }
-
-  try {
-    const response = await fetch(`${BASE_URL}/document/${id}`, {
-      method: 'GET',
-      headers: {
-        "x-api-key": API_KEY,
-        "Accept": "application/json"
-      }
-    })
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error(`Document with ID ${id} not found`);
-      } else if (response.status === 400) {
-        throw new Error(`Bad request: Invalid document ID format`);
-      } else if (response.status === 401 || response.status === 403) {
-        throw new Error(`Authentication or authorization error`);
-      } else if (response.status === 500) {
-        throw new Error(`Server error occurred while retrieving document`);
-      } else {
-        throw new Error(`Failed to retrieve document: ${response.status} ${response.statusText}`);
-      }
-    }
-
-    const json = await response.json();
-    console.log(json)
-    return json;
-  } catch (error: unknown) {
-    console.error("Error in callGetDocById:", error);
-    throw new Error(`Error fetching document with ID ${id}: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
-
-/*
-Test
-callGetDocById('135')
-*/
-
-
-async function callSearch() { // no parameters
-
-  /* request body:
-    {
-    "url": "string",
-    "desc": "string",
-    "threshold": 0,
-    "topK": 10
-    }
-  */
- // let response;
-
-  const response = await fetch(`${BASE_URL}/search`, {
-    headers: {
-      "x-api-key": API_KEY,
-    },
-    method: "POST",
-    body: JSON.stringify({
-      "url": "string",   // sth real
-      "desc": "string",  // sth real
-      "threshold": 0,
-      "topK": 10
-      }),
-  });
-/*
-  try {
-    response = await fetch(`${BASE_URL}/search`, {
-      headers: {
-        "x-api-key": API_KEY,
-      },
-      method: 'POST',
-    })
-
-    if (!response.ok) {
-      throw new Error(`Response status: ${response.status} - ${response.statusText}`);
-    }
-
-    const json = await response.json();
-    console.log("Response JSON:", json);
-    // return json;
-  } catch (error: unknown) {
-    console.error("Error in callGetById:", error);
-    throw new Error(`Error fetching: ${error instanceof Error ? error.message : error}`);
-  }
-
-  return response; */
- // console.log('happening')
-}
-
-// callSearch();
-
-async function callDeleteDocById(id: string): Promise<SDKTypes.DeleteDocumentResponse> {
-  if (!id) {
-    throw new Error("Document ID is required");
-  }
-
-  try {
-    // Include query parameters in the request
-    const response = await fetch(`${BASE_URL}/delete/${id}`, {
-      method: 'DELETE',
-      headers: {
-        "x-api-key": API_KEY,
-        "Content-Type": "application/json"
-      }
-    });
-
-    if (!response.ok) {
-      if (response.status === 400) {
-        throw new Error(`Bad request: Invalid document ID or format`);
-      } else if (response.status === 404) {
-        throw new Error(`Document with ID ${id} not found`);
-      } else if (response.status === 500) {
-        throw new Error(`Server error occurred while deleting document`);
-      } else {
-        throw new Error(`Failed to delete document: ${response.status} ${response.statusText}`);
-      }
-    }
-
-    const result = await response.json();
-    return result;
-  } catch (error: unknown) {
-    console.error("Error in callDeleteDocById:", error);
-    throw new Error(`Error deleting document: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
-
-// callDeleteDocById('152');
-
-export class DocumentAPI {
+export class Client {
   private apiKey: string;
 
-  constructor(apiKey: string) {
+  constructor({ apiKey }) {
     this.apiKey = apiKey;
   }
 
-  public async callGetDocById2(
-    { limit = '10', offset = '0' }: SDKTypes.GetDocsParameter
-  ): Promise<SDKTypes.DocumentsResponse> {
-    try {
-      // Include query parameters in the request
-      const url = new URL(`${BASE_URL}/document`);
-      url.searchParams.append('limit', limit.toString());
-      url.searchParams.append('offset', offset.toString());
+  public async getDocuments(
+    { limit = '20', offset = '0' }: SDKTypes.GetDocsParameter = {}
+  ): Promise<SDKTypes.GetDocsReturn | SDKTypes.ErrorResponse> {
 
-      const response = await fetch(url.toString(), {
+    const url = `${BASE_URL}/document?limit=${limit}&offset=${offset}`;
+
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          "x-api-key": API_KEY,
+        },
+      })
+
+      if (!response.ok) {
+        const errorResponse = await response.json(); // Extract error response
+
+        throw new Error(
+          JSON.stringify({
+            status: response.status,
+            message: errorResponse?.error
+          })
+        );
+      }
+
+      return await response.json();
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+
+        // Attempt to parse the error message as JSON (to extract structured errors)
+        const parsedError = JSON.parse(error.message);
+
+        switch (parsedError.status) {
+          case 400:
+            console.error("Validation error:", parsedError.message);
+            return { error: parsedError }; // Return structured error object
+          case 500:
+            console.error("Server error:", parsedError.message);
+            return { error: parsedError };
+          default:
+            throw new Error(`Unhandled error: ${parsedError.message}`);
+        }
+      }
+
+      throw new Error("An unknown error occurred");
+    }
+  }
+
+  public async getDocumentById(id: string): Promise<SDKTypes.DocumentResponse> {
+    try {
+
+      const response = await fetch(`${BASE_URL}/document/${id}`, {
         method: 'GET',
         headers: {
           "x-api-key": API_KEY,
           "Accept": "application/json"
         }
-      });
+      })
 
       if (!response.ok) {
-        throw new Error(`API error: ${response.status} - ${response.statusText}`);
+        if (response.status === 404) {
+          throw new Error(`Document with ID ${id} not found`);
+        } else if (response.status === 400) {
+          throw new Error(`Bad request: Invalid document ID format`);
+        } else if (response.status === 401 || response.status === 403) {
+          throw new Error(`Authentication or authorization error`);
+        } else if (response.status === 500) {
+          throw new Error(`Server error occurred while retrieving document`);
+        } else {
+          throw new Error(`Failed to retrieve document: ${response.status} ${response.statusText}`);
+        }
       }
 
       const json = await response.json();
-
-      // Assuming the API doesn't handle pagination and returns all documents
-      // We manually handle pagination client-side
-      const paginatedDocuments = json.documents.slice(offset, offset + limit);
-
-      return {
-        documents: paginatedDocuments,
-        limit: limit,
-        offset: offset,
-        total: json.documents?.length || 0 // Return actual total count, not just limit
-      };
+      console.log(json)
+      return json;
     } catch (error: unknown) {
-      console.error("Error in callGetDocuments:", error);
-      throw new Error(`Error fetching documents: ${error instanceof Error ? error.message : String(error)}`);
+      console.error("Error in getDocumentById:", error);
+      throw new Error(`Error fetching document with ID ${id}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  public async deleteDocById(id: string): Promise<SDKTypes.DeleteDocumentResponse> {
+    if (!id) {
+      throw new Error("Document ID is required");
+    }
+
+    try {
+      // Include query parameters in the request
+      const response = await fetch(`${BASE_URL}/document/${id}`, {
+        method: 'DELETE',
+        headers: {
+          "x-api-key": API_KEY,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (!response.ok) {
+        if (response.status === 400) {
+          throw new Error(`Bad request: Invalid document ID or format`);
+        } else if (response.status === 404) {
+          throw new Error(`Document with ID ${id} not found`);
+        } else if (response.status === 500) {
+          throw new Error(`Server error occurred while deleting document`);
+        } else {
+          throw new Error(`Failed to delete document: ${response.status} ${response.statusText}`);
+        }
+      }
+
+      const result = await response.json();
+      console.log(result)
+      return result;
+    } catch (error: unknown) {
+      console.error("Error in callDeleteDocById:", error);
+      throw new Error(`Error deleting document: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -241,12 +138,110 @@ export class DocumentAPI {
 */
 }
 
-// const params = {
-//   limit: '1',
-//   offset: '1',
-// };
+/*
+Tests
+callGetDocuments({ limit: '1', offset: '10'});
+callGetDocuments({ limit: '3', offset: '2'});
+callGetDocuments({ limit: '5', offset: '5'});
+*/
+
+async function callPostDocument(): Promise<SDKTypes.PostImageSuccess | Error>{ // no parameters
+  const testPost = {
+    "images": [
+      {
+        "desc": "Chase's pet monkey"
+      },
+    ]
+  }
+
+try {
+  const response = await fetch(`${BASE_URL}/document`, {
+    method: "POST",
+    headers: {
+      "x-api-key": API_KEY,
+      "Accept": "application/json",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(testPost),
+  });
+
+    if (!response.ok) {
+      const errorText = await response.text(); // Capture error response if available
+      throw new Error(`Response status: ${response.status} - ${response.statusText}\n${errorText}`);
+    }
+
+    const json = await response.json();
+    console.log("Response JSON:", json);
+    return json;
+  } catch (error: unknown) {
+    console.error("Error in search:", error);
+    throw new Error(`Error fetching: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
 /*
 Test
-let api = new DocumentAPI(API_KEY);
-console.log(api.getDocuments(params));
+callPostDocument()
 */
+
+
+
+/*
+Test
+callGetDocById('168')
+*/
+
+async function callSearch() { // no parameters
+  const testPost = {
+    "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+    "desc": "terrible website",
+    "threshold": 0,
+    "topK": 10
+  }
+
+ try {
+  const response = await fetch(`${BASE_URL}/search`, {
+    method: "POST",
+    headers: {
+      "x-api-key": API_KEY,
+      "Accept": "application/json",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(testPost),
+  });
+
+    if (!response.ok) {
+      const errorText = await response.text(); // Capture error response if available
+      throw new Error(`Response status: ${response.status} - ${response.statusText}\n${errorText}`);
+    }
+
+    const json = await response.json();
+    console.log("Response JSON:", json);
+    return json;
+  } catch (error: unknown) {
+    console.error("Error in search:", error);
+    throw new Error(`Error fetching: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/* Test
+callSearch();
+*/
+
+
+let api = new Client({ apiKey: API_KEY });
+
+
+/* tests */
+/* should work */
+// api.getDocuments();
+// api.getDocuments({ limit: '2', offset: '3' });
+// api.getDocuments({ limit: '2' });
+// api.getDocuments({ offset: '2' });
+// api.getDocuments({ limit: '2', offset: '2', bs: 'idk' });  * requires changing parameter type to any to run
+
+/* shouldn't work */
+api.getDocuments({ limit: '-2', offset: '3' });
+
+
+// api.getDocumentById('190');
+// api.callDeleteDocById('172');
