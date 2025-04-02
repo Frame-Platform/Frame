@@ -19,11 +19,13 @@ export type TitanInputType = z.infer<typeof titanInputSchema>;
 
 export const DatabaseCredentialsSchema = z.object({
   password: z.string(),
+  /*
   dbname: z.string(),
   engine: z.string(),
   port: z.number(),
   dbInstanceIdentifier: z.string(),
   host: z.string(),
+  */
   username: z.string(),
 });
 
