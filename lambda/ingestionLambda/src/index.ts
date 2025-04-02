@@ -1,31 +1,24 @@
 import { SQSEvent } from "aws-lambda";
 import {
   pgInsert,
-  pgConnect,
   resizeImageToLimit,
   callTitan,
   downloadImage,
 } from "./utils";
 import { payloadSchema } from "./types";
-import { Client } from "pg";
+import dotenv from "dotenv";
 import { ZodError } from "zod";
-let pgClient: null | Client = null;
 
 export const handler = async (event: SQSEvent) => {
+  dotenv.config();
   try {
     const message = JSON.parse(event.Records[0].body);
-    const validationResult = payloadSchema.parse(message);
-    const { url, description } = validationResult;
+    const document = payloadSchema.parse(message);
+    const { url, description } = document;
 
-    // Fetch the image and create a buffer
-    let imageBuffer;
+    let imagePayload = {};
     if (url) {
-      imageBuffer = await downloadImage(url);
-    }
-
-    // Resize the buffer and convert to base64
-    let imagePayload;
-    if (imageBuffer) {
+      const imageBuffer = await downloadImage(url);
       const resizedBuffer = await resizeImageToLimit(imageBuffer);
       imagePayload = { inputImage: resizedBuffer.toString("base64") };
     }
@@ -33,50 +26,16 @@ export const handler = async (event: SQSEvent) => {
     const textPayload = description ? { inputText: description } : {};
     const payload = { ...imagePayload, ...textPayload };
 
-    // Embed the document
     const embedding = await callTitan(payload);
+    await pgInsert(embedding, document);
 
-    // Insert document embedding into RDS
-    if (!pgClient) {
-      pgClient = await pgConnect();
-    }
-
-    await pgInsert(embedding, pgClient, url, description);
-
-    // Send response back
-    const response = {
-      statusCode: 200,
-      body: JSON.stringify({
-        message: "Document was successfully ingested",
-        url,
-        description,
-        embedding,
-      }),
-    };
-    return response;
+    return { stausCode: 200 };
   } catch (e) {
     console.log(e);
-    if (e instanceof ZodError) {
-      const errorMessages = e.errors.map((err) => err.message).join(", ");
-      return {
-        statusCode: 400,
-        body: JSON.stringify({
-          error: "Validation error",
-          details: errorMessages,
-        }),
-      };
+    if (e instanceof ZodError || e instanceof Error) {
+      return { statusCode: 400 };
     }
 
-    if (e instanceof Error) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: e.message }),
-      };
-    }
-
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ message: "Failed to ingest document", e }),
-    };
+    return { statusCode: 500 };
   }
 };
