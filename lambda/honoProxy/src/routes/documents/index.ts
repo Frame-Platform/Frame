@@ -44,13 +44,19 @@ export const getDocumentsRoute = createRoute({
             documents: [
               {
                 id: 1,
-                url: "https://example.com/pic1.png",
-                description: "First image",
+                url: "https://example.com/cezanne.png",
+                description: "An painting of the Mont Sainte-Victoire",
+                metadata: {
+                  title: "Mont Sainte-Victoire",
+                  medium: "oil on canvas",
+                  date: "1902-04",
+                },
               },
               {
                 id: 2,
                 url: "https://example.com/pic2.png",
-                description: "Second image",
+                description: null,
+                metadata: null,
               },
             ],
             limit: 2,
@@ -107,6 +113,9 @@ export const getDocumentByIdRoute = createRoute({
               id: 7,
               url: "https://example.com/monkeyselfie.jpeg",
               description: "An image of monkey takign a selfie.",
+              metadata: {
+                tags: ["monkey", "animal", "selfie"],
+              },
             },
           },
         },
@@ -157,8 +166,17 @@ export const createDocumentRoute = createRoute({
           example: {
             documents: [
               {
-                url: "https://example.com/image1.jpg",
-                description: "A photo of the Colosseum in Rome",
+                url: "https://example.com/colosseum.jpg",
+                description:
+                  "A photograph of tourists strolling around the Colosseum on a summer day.",
+                metadata: {
+                  title: "The Colosseum",
+                  photographer: "John Doe",
+                  altText: "A photo of the Colosseum in Rome",
+                },
+              },
+              {
+                url: "https://example.com/pantheon.jpg",
               },
               {
                 description: "An image with no URL, only a description",
@@ -180,11 +198,14 @@ export const createDocumentRoute = createRoute({
           example: [
             {
               url: "https://example.com/image1.jpg",
-              description: "A photo of the Colosseum in Rome",
+              metadata: {
+                altText: "A photo of the Colosseum in Rome",
+              },
               success: true,
             },
             {
               description: "An image with no URL, only a description",
+              metadata: null,
               success: true,
             },
             {
@@ -242,8 +263,12 @@ export const deleteDocumentRoute = createRoute({
           example: {
             document: {
               id: 42,
-              url: "https://example.com/resource.pdf",
-              description: "A sample document",
+              url: "https://example.com/monalisa.jpeg",
+              description: "Image of a sitting woman.",
+              metadata: {
+                title: "Mona Lisa",
+                artist: "Leonardo da Vinci",
+              },
             },
           },
         },
