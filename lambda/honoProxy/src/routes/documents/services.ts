@@ -7,20 +7,16 @@ import {
 
 import { imageResponseSchema, ValidDocResult } from "./schema";
 import { BaseDocumentType } from "../sharedSchemas";
-import { Instance } from "aws-cdk-lib/aws-ec2";
 
 const SQS_BATCH_SIZE = 10; //AWS Max = 10
 
-export const pgGetDocuments = async (
-  limit: number, // default limit is 1mil, default offset is 0 => returns all
-  offset: number,
-) => {
+export const pgGetDocuments = async (limit: number, offset: number) => {
   try {
     const pgClient = await pgConnect();
 
     const query = `
-      SELECT id, url, description
-      FROM documents
+      SELECT id, url, description, metadata
+      FROM documents3
       ORDER BY id DESC
       LIMIT $1
       OFFSET $2
@@ -66,12 +62,13 @@ export const pgDeleteDocument = async (id: number) => {
 const formatResult = (
   success: boolean,
   errors: string | null | undefined,
-  doc: BaseDocumentType,
+  { url, description, metadata }: BaseDocumentType,
 ) => ({
   success,
   ...(errors && { errors }),
-  ...(doc?.url && { url: doc.url }),
-  ...(doc?.description && { description: doc.description }),
+  ...(url && { url: url }),
+  ...(description && { description: description }),
+  ...(metadata && { metadata: metadata }),
 });
 
 export async function sendToSQS(documents: BaseDocumentType[]) {
@@ -80,28 +77,21 @@ export async function sendToSQS(documents: BaseDocumentType[]) {
   const batches = [];
   for (let i = 0; i < documents.length; i += SQS_BATCH_SIZE) {
     const batch = documents.slice(i, i + SQS_BATCH_SIZE);
-    const entries = batch.map((image, index) => ({
+    const entries = batch.map(({ url, description, metadata }, index) => ({
       Id: String(i + index),
       MessageBody: JSON.stringify({
-        url: image.url,
-        description: image.description || null,
+        ...{ url, description, metadata },
         timestamp: new Date().toISOString(),
       }),
     }));
     batches.push(entries);
   }
 
-
   const docSendResult: ValidDocResult[] = [];
   for (const entries of batches) {
-    const command = new SendMessageBatchCommand({
-      QueueUrl: process.env.DOCUMENT_QUEUE_URL,
-      Entries: entries,
-    });
-
     try {
       const command = new SendMessageBatchCommand({
-        QueueUrl: process.env.QUEUE_URL,
+        QueueUrl: process.env.DOCUMENT_QUEUE_URL,
         Entries: entries,
       });
 
@@ -140,39 +130,38 @@ export async function sendToSQS(documents: BaseDocumentType[]) {
   return docSendResult;
 }
 
-export const validateImage = async ({ url, description }: BaseDocumentType) => {
+export const validateImage = async (document: BaseDocumentType) => {
   try {
-    if (!url) return { success: true, url, description, errors: "" };
+    if (!document.url) {
+      return { success: true, ...document };
+    }
 
-    const res = await fetch(url, { method: "HEAD" });
+    const res = await fetch(document.url, { method: "HEAD" });
     if (!res.ok) {
       return {
         success: false,
-        url,
-        description,
         errors: `Fetch error: Received ${res.status} status.`,
+        ...document,
       };
     }
 
-    const contentType = res.headers.get("content-type");
-    const contentLength = res.headers.get("content-length");
-
     const parsed = imageResponseSchema.safeParse({
-      contentType,
-      contentLength,
+      contentType: res.headers.get("content-type"),
+      contentLength: res.headers.get("content-length"),
     });
 
     if (!parsed.success) {
       const errors = parsed.error.errors.map((e) => e.message).join(", ");
-      return { success: false, url, description, errors };
+      return { success: false, errors, ...document };
     }
 
-    return { success: true, url, description };
+    return { success: true, ...document };
   } catch (e: unknown) {
-    const errorMessage =
-      e instanceof Error
-        ? e.message
-        : "Unknown error occurred during validation.";
-    return { success: false, url, description, errors: errorMessage };
+    console.log(e);
+    let errorMessage = "Unknown error occurred during validation.";
+    if (e instanceof Error) {
+      errorMessage = e.message;
+    }
+    return { success: false, errors: errorMessage, ...document };
   }
 };
