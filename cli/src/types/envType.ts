@@ -9,5 +9,5 @@ export interface envType {
   postgres_user: string;
   postgres_password: string;
   postgres_db_name: string;
-  postgres_table_name: string;
+  // postgres_table_name: string;
 }
