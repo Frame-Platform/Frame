@@ -16,7 +16,7 @@ export const pgGetDocuments = async (limit: number, offset: number) => {
 
     const query = `
       SELECT id, url, description, metadata
-      FROM documents3
+      FROM documents4
       ORDER BY id DESC
       LIMIT $1
       OFFSET $2
@@ -33,8 +33,8 @@ export const pgGetById = async (id: string | number) => {
     const pgClient = await pgConnect();
 
     const query = `
-      SELECT id, url, description
-      FROM documents
+      SELECT id, url, description, metadata
+      FROM documents4
       WHERE id = $1;
     `;
 
@@ -48,7 +48,7 @@ export const pgDeleteDocument = async (id: number) => {
   try {
     const pgClient = await pgConnect();
     const query = `
-      DELETE FROM documents
+      DELETE FROM documents4
       WHERE id = $1
       RETURNING id, url, description;
     `;
