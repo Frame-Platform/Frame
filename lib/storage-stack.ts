@@ -76,14 +76,13 @@ export class StorageStack extends cdk.Stack {
       "DatabaseCredentials",
       {
         secretName: `${id}-db-credentials`,
-        description: "Credentials for the document embedding vector database",
+        description:
+          "Username and password for the document embedding vector database",
         secretStringValue: cdk.SecretValue.unsafePlainText(
           JSON.stringify({
             username: dbUsername,
-            // Security concern of including dbPassword in CloudFormation
-            // template - is there a better way?
             password: dbPassword,
-            dbname: dbName,
+            // dbname: dbName,
           })
         ),
       }
@@ -224,6 +223,7 @@ export class StorageStack extends cdk.Stack {
     );
     */
 
+    /*
     // Update the secret with the database endpoint after creation (i.e. update the host in secret)
     const secretAttachment = new secretsmanager.SecretTargetAttachment(
       this,
@@ -233,6 +233,7 @@ export class StorageStack extends cdk.Stack {
         target: this.database,
       }
     );
+    */
 
     // Create outputs for cross-stack references
     // I.e. Other stacks can input the exportName parameter values using `Fn::ImportValue`.
