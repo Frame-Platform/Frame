@@ -1,102 +1,100 @@
 # Document Embedding Pipeline - Compute Stack
 
-The Compute Stack component of the Document Embedding Pipeline contains the Lambda functions that power the document embedding and search capabilities.
+## What This Creates
 
-## Overview
+The Compute Stack provides the processing power behind the Document Embedding Pipeline through three specialized Lambda functions:
 
-The Compute Stack creates the following AWS resources:
+- API Lambda: Handles all incoming requests and routes them to appropriate services
+- Image Ingestion Lambda: Processes images to generate embeddings asynchronously
+- Search Lambda: Performs similarity searches across your image embeddings
 
-- API Lambda (built with Hono.js) for handling HTTP requests
-- Image Ingestion Lambda for processing documents from the SQS queue
-- Search Lambda for performing similarity searches
-- IAM roles with the necessary permissions
-
-## Lambda Functions
+## Lambda Functions In Detail
 
 ### API Lambda (Hono)
 
-This Lambda function acts as the entry point for all HTTP requests and routes them appropriately:
+This serves as the main entry point for all requests to your system.
 
-- **GET /document**: Retrieves a paginated list of documents from the RDS
-- **GET /document/:id**: Retrieves a specific document by ID from the RDS
-- **POST /document**: Validates image URLs and sends them to SQS for asynchronous processing
-- **POST /search**: Forwards similarity search requests to the Search Lambda
-- **DELETE /document/:id**: Deletes images from the RDS database (to remove the associated embedding)
+**What it does:**
 
-Configuration:
+- Routes HTTP requests to the appropriate service
+- Validates incoming data
+- Communicates with the database, SQS and other Lambda functions
+
+| Endpoint        | Method | Purpose                                             |
+| :-------------- | :----- | :-------------------------------------------------- |
+| `/document`     | GET    | Retrieve a paginated list of documents              |
+| `/document/:id` | GET    | Retrieve a specific document by ID                  |
+| `/document`     | POST   | Process new image URLs and queue them for embedding |
+| `/search`       | POST   | Forward search requests to the Search Lambda        |
+| `/document/:id` | DELETE | Remove documents and their embeddings               |
+
+**Technical Details:**
 
 - Memory: 1769MB
 - Timeout: 30 seconds
-- Permissions:
-  - SQS full access - for message sending (for Image Ingestion SQS)
-  - S3 full access - to put object, get object and delete object from S3 bucket
-  - Lambda invocation (for direct invocations of Search Lambda)
-  - Get Secret Value from Secrets Manager (for database access)
+- AWS Permissions:
+  - SQS full access (to send messages to processing queue)
+  - S3 full access (to manage uploaded images)
+  - Lambda invocation (to call Search Lambda)
+  - Secrets Manager access (for database credentials)
 
 ### Image Ingestion Lambda
 
-This Lambda function processes documents asynchronously:
+This processes your images behind the scenes to generate AI embeddings.
 
-- Triggered by messages in the SQS queue
-- Performs pre-processing, embedding generation, and database storage
-- Handles batch processing of multiple documents
+**What it does:**
 
-Configuration:
+- Listens for new messages in the SQS queue
+- Downloads and processes images
+- Generates embeddings using Amazon Bedrock
+- Stores results in the PostgreSQL database
 
-- Memory: 1769MB
-- Timeout: 30 seconds (maximum time)
-- SQS Message Batch Size: 1 message
-- Triggers:
-  - SQS trigger for batch processing
-- Permissions:
-  - Bedrock model invocation
-  - Get Secret Value from Secrets Manager (for database access)
-
-### Search Lambda
-
-This Lambda function handles search requests:
-
-- Performs pre-processing of search queries
-- Generates embeddings for text or image queries
-- Executes vector similarity search in the database
-- Returns ranked search results
-
-Configuration:
+**Technical Details:**
 
 - Memory: 1769MB
 - Timeout: 30 seconds
-- Triggers:
-  - API Lambda (Hono)
-- Permissions:
-  - Bedrock model invocation
-  - Get Secret Value from Secrets Manager (for database access)
+- Processes one image at a time (batch size: 1)
+- AWS Permissions:
+  - Bedrock model access (to generate embeddings)
+  - Secrets Manager access (for database credentials)
+
+### Search Lambda
+
+This handles all similarity searches across your embeddings.
+
+**What it does:**
+
+- Processes search queries (text or images)
+- Generates embeddings for the search input
+- Finds similar images using vector similarity search
+- Returns ranked results
+
+**Technical Details:**
+
+- Memory: 1769MB
+- Timeout: 30 seconds
+- AWS Permissions:
+  - Bedrock model access (for search query embedding)
+  - Secrets Manager access (for database credentials)
 
 ## Environment Variables
 
-Each Lambda function uses specific environment variables:
+Each Lambda function is configured using specific environment variables:
 
-| Variable            | Description                                           | Used by                         |
-| ------------------- | ----------------------------------------------------- | ------------------------------- |
-| DOCUMENT_QUEUE_URL  | URL of the SQS queue for document processing          | API Lambda                      |
-| DATABASE_SECRET_ARN | ARN of the Secrets Manager secret with DB credentials | All Lambdas                     |
-| DATABASE_HOST       | Hostname of the RDS database                          | All Lambdas                     |
-| DATABASE_PORT       | Port of the RDS database                              | All Lambdas                     |
-| SEARCH_LAMBDA_ARN   | ARN of the Search Lambda                              | API Lambda                      |
-| IMAGE_BUCKET_NAME   | Name of the S3 bucket                                 | API Lambda                      |
-| BEDROCK_MODEL_ID    | ID of the embedding model                             | Image Ingestion, Search Lambdas |
-| DATABASE_NAME       | Name of the database                                  | All Lambdas                     |
+| Variable              | Description                                           | Used by                         |
+| --------------------- | ----------------------------------------------------- | ------------------------------- |
+| `DOCUMENT_QUEUE_URL`  | URL of the SQS queue for document processing          | API Lambda                      |
+| `DATABASE_SECRET_ARN` | ARN of the Secrets Manager secret with DB credentials | All Lambdas                     |
+| `DATABASE_HOST`       | Hostname of the RDS database                          | All Lambdas                     |
+| `DATABASE_PORT`       | Port of the RDS database                              | All Lambdas                     |
+| `SEARCH_LAMBDA_ARN`   | ARN of the Search Lambda                              | API Lambda                      |
+| `IMAGE_BUCKET_NAME`   | Name of the S3 bucket                                 | API Lambda                      |
+| `BEDROCK_MODEL_ID`    | ID of the embedding model                             | Image Ingestion, Search Lambdas |
+| `DATABASE_NAME`       | Name of the database                                  | All Lambdas                     |
 
-## IAM Permissions
+## System Architecture
 
-The stack creates IAM roles with the following permissions:
+The Compute Stack integrates with other components:
 
-- **API Lambda**: Basic Lambda execution, SQS message sending, Lambda invocation (Direct invocation of Search Lambda), database access, S3 bucket access
-- **Image Ingestion Lambda**: Basic Lambda execution, Bedrock model invocation, database access
-- **Search Lambda**: Basic Lambda execution, Bedrock model invocation, database access
-
-## Integration with Other Stacks
-
-This stack depends on:
-
-- **Messaging Stack**: Uses the SQS queue for asynchronous document processing
-- **Storage Stack**: Uses the RDS database for storing and querying embeddings and the S3 bucket for temporary image storage during processing
+- Messaging Stack: Uses SQS queues for reliable asynchronous processing
+- Storage Stack: Uses PostgreSQL for vector search and S3 for image storage

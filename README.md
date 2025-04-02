@@ -1,6 +1,17 @@
 ## Overview
 
-This repository contains an automated deployment process for an image-embedding pipeline designed to be deployed remotely to an end user's AWS account. The pipeline enables efficient processing and embedding of images for applications which require easy access to embeddings associated with image data, without the hassle of building out custom infrastructure, connecting to AI models etc.
+### What is this?
+
+A ready-to-deploy solution that processes and generates embeddings for your images automatically in your AWS account. No need to build custom infrastructure or handle connections to AI models yourself.
+
+### What You'll Get
+
+After deployment, you'll have a complete system that can:
+
+- Store images in the cloud
+- Generate AI embeddings for those images
+- Search for similar images using text or other images
+- Query your image database
 
 ## Infrastructure Overview
 
@@ -12,88 +23,109 @@ Full details of the infrastructure to be deployed for each individual stack can 
 
 ## Prerequisites
 
-Before deploying the infrastructure, ensure you have the following prerequisites set up:
+Before starting, you'll need:
 
-- An active AWS account with appropriate permissions.
-- Node.js (version 14.15.0 or later) and npm installed on your system: https://nodejs.org/en/download/.
-- AWS CLI installed and configured with access credentials. Details of how to do so can be found here: https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html.
-- AWS CDK installed: https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html.
-- TypeScript 3.8 or later installed on your system: `npm -g install typescript`.
-- Git installed on your system: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git.
+- An active AWS account with admin permissions
+- Node.js v14.15.0+ and npm ([download here](https://nodejs.org/en/download/))
+- AWS CLI configured with your credentials ([installation guide](https://docs.aws.amazon.com/cli/latest/userguide/))
+- AWS CDK ([installation guide](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html))
+- TypeScript 3.8+ (`npm -g install typescript`)
+- Git ([installation guide](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git))
 - Sufficient AWS quota limits for the services being deployed
 
 ## Deployment Process
 
-### Step 1: Installation
+### Step 1: Get and Install the Code
 
-- Clone the repository: `git clone https://github.com/UntitledCapstoneProj/new.git`.
-- Move into the top-level directory with `cd new`.
+Clone the repository and move into the top-level directory:
+
+```console
+git clone https://github.com/UntitledCapstoneProj/new.git
+cd new
+```
 
 ### Step 2: Build the Project Environment
 
-- Run `npm run build:all`. This will run the `build-all.js` script to:
-  - Set up the project environment by installing the required dependencies for the CLI and the CDK.
-  - Build the CLI by compiling the TypeScript files into JavaScript.
-  - Link the CLI globally on your system (so as to enable the use of the `document-embedding` commands referenced below).
-  - Build the Lambda functions referenced in the CDK (packaging them up into zip files ready for deployment).
+Run the below command:
 
-### Step 3: Initialize the Environment
+```console
+npm run build:all
+```
 
-Initialize the environment variables specific to your AWS account with `document-embedding init`.
+This will run the `build-all.js` script to:
+
+- Set up the project environment by installing the required dependencies for the CLI and the CDK.
+- Build the CLI by compiling the TypeScript files into JavaScript.
+- Link the CLI globally on your system (so as to enable the use of the `document-embedding` commands referenced below).
+- Build the Lambda functions referenced in the CDK (packaging them up into zip files ready for deployment).
+
+### Step 3: Configure Your Settings
+
+Run the below command:
+
+```console
+document-embedding init
+```
 
 This command will guide you through the initialization process. In particular, you will be prompted to provide the following information:
 
 - AWS Access Key ID (can be obtained in the AWS console)
 - AWS Secret Access Key (can be obtained in the AWS console)
 - AWS Region
-- PostgreSQL Username
-- PostgreSQL Password
-- PostgreSQL Database Name
-- PostgreSQL Table Name
+- Database Credentials (used for setup)
+  - PostgreSQL Username
+  - PostgreSQL Password
+  - PostgreSQL Database Name
 
-Any other configuration parameters specific to your deployment
+### Step 4: Deploy the Infrastructure to AWS
 
-This information will be securely stored and used during the deployment process.
+Run the below command to deploy the image-embedding pipeline infrastructure to your AWS account:
 
-### Step 4: Deploy the Infrastructure
-
-Deploy the image-embedding pipeline to your AWS account: with `document-embedding deploy`.
+```console
+document-embedding deploy
+```
 
 During the deployment:
 
-- The CDK will create all necessary AWS resources. This process can take several minutes so please be patient.
+- The CDK will create all necessary AWS resources. This process can take 10-15 minutes, so please be patient.
 - Upon completion, you'll receive confirmation of successful deployment along with important endpoints or access information for the created resources.
-- In particular, you will receive confirmation of the API Gateway URL and your specific API Access Key details. These details are required to connect to the API Gateway endpoints via our SDK client.
+- In particular, you will receive confirmation of the API Gateway URL and your specific API Access Key ID details. You will need to locate the API Key associated with the API Key ID (in the AWS Management Console) in order to connect to our API endpoints via our SDK client.
 
-### Step 5: Create the Database Table
+### Step 5: Set Up The Database
 
-- Run `npm run database:setup` from the top-level directory.
-- This will create your database table, properly deployed for optimised vector embedding.
+Run the below command:
 
-### Step 6: Add AWS Access to Amazon Bedrock Foundation Models
+```console
+npm run database:setup
+```
 
-Current details of how to do this can be found here: https://docs.aws.amazon.com/bedrock/latest/userguide/model-access-modify.html
+This creates an optimized database table for storing vector embeddings.
 
-At the time of writing, you will need to:
+### Step 6: Enable Amazon Bedrock Access
 
-- Make sure you have permission to request access, or modify access, to Amazon Bedrock foundation models.
-- Navigate to the Amazon Bedrock console in your AWS account.
-- In the left navigation pane, under Bedrock configurations, choose Model access.
-- Select 'Enable Specific Models':
-  - Select the models that you want the account to have access to and unselect the models that you don't want the account to have access to. In this case, we need the model to have access to the Amazon Titan Multimodal Embeddings G1 model so select the check box next to this model.
-- Select 'Next' then 'Submit'.
-- It may take several minutes to receive or remove access to models but, once access is granted, you should see 'Access granted' next to the model name.
+For the AI models to work, you need to enable Bedrock access.
+
+Go to the [Amazon Bedrock console](https://console.aws.amazon.com/bedrock). Details of how to enable access can be found [here](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access-modify.html).
+
+At the time of writing, the steps are:
+
+1. In the left menu, select "Model access" under "Bedrock configurations".
+2. Select "Enable Specific Models".
+3. Select the check box next to "Amazon Titan Multimodal Embeddings G1" model.
+4. Click "Next" → "Submit".
+5. Wait for "Access granted" status (may take a few minutes)
 
 ### Step 7: Verify the Deployment
 
-After successful deployment, verify that all components are working correctly:
-
-- Check the AWS Management Console to confirm resources have been created.
-- Test the image embedding functionality by uploading a sample image via our SDK client.
+Upload a test image using our SDK client to verify everything works correctly.
 
 ### Step 8 (if relevant and necessary): Destroy the Infrastructure
 
-When you no longer need the image-embedding pipeline, you can remove all deployed resources with `document-embedding destroy`.
+When you no longer need the image-embedding pipeline, you can remove all deployed resources with:
+
+```console
+document-embedding destroy
+```
 
 Important:
 
@@ -103,25 +135,25 @@ Important:
 
 ## Usage
 
-Once deployed, you can use the image-embedding pipeline to:
+With your deployment complete, you can:
 
-- Upload image(s) for easy embedding.
-- Carry out similarity searches on your embedded images against a provided text snippet or against another image.
-- Query the PostgreSQL database to read, update or delete embeddings.
-- Integrate with your existing applications using the provided endpoints and our SDK client.
+- Upload images for automatic embedding
+- Search for similar images using text descriptions
+- Find visually similar images
+- Query, update, or delete your image data
+
+Refer to the SDK documentation for integration with your applications.
 
 ## Monitoring and Troubleshooting
 
-The deployed infrastructure includes CloudWatch logs and metrics for monitoring:
+Your deployment includes monitoring through AWS CloudWatch:
 
-- Lambda function executions and errors
-- Database connection status
-- S3 bucket operations
+- Check Lambda function logs for errors
+- Monitor database connections
+- Track S3 storage operations
 
-[TO DOUBLE CHECK]
+To access logs:
 
-To access logs and metrics:
-
-- Navigate to the AWS CloudWatch console
-- Select the appropriate log group for the component you want to monitor
-- Review logs for any error messages or performance issues.
+- Go to the AWS CloudWatch console
+- Select the log group for the component you're investigating
+- Review logs for errors or performance issues
