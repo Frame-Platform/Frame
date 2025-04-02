@@ -90,6 +90,7 @@ export const pgConnect = async () => {
     throw new Error(`Error connecting to Postgres`);
   }
 };
+
 export const pgInsert = async (
   embedding: number[],
   document: DocPayloadType,
@@ -130,13 +131,14 @@ export const pgInsert = async (
     // await pgClient.query(
     //   `SELECT setval('documents_id_seq', (SELECT MAX(id) FROM documents3));`,
     // );
+
   } catch (e) {
     throw new Error(`Error inserting document into database: ${e}`);
   }
 };
 
 export const resizeImageToLimit = async (
-  imageBuffer: Buffer,
+  imageBuffer: Buffer
 ): Promise<Buffer> => {
   const MAX_DIMENSION = 2048;
   try {
@@ -166,7 +168,7 @@ export const callTitan = async (payload: TitanInputType) => {
 
     const responseBedrock = await bedrockClient.send(command);
     const responseBody = JSON.parse(
-      Buffer.from(responseBedrock.body).toString(),
+      Buffer.from(responseBedrock.body).toString()
     );
 
     return responseBody.embedding;
@@ -185,7 +187,7 @@ export const downloadImage = async (url: string) => {
 
   if (!res.ok) {
     throw new Error(
-      `Non 200 response for url ${url}, status:${res.status} ${res.statusText}`,
+      `Non 200 response for url ${url}, status:${res.status} ${res.statusText}`
     );
   }
   const contentType = res.headers.get("content-type");
