@@ -12,6 +12,7 @@ export const errorResponseSchema = z.object({
 export const baseDocumentSchema = z.object({
   url: z.string().url({ message: "Invalid URL format" }).optional().nullable(),
   description: z.string().optional().nullable(),
+  metadata: z.record(z.any()).optional(),
 });
 export type BaseDocumentType = z.infer<typeof baseDocumentSchema>;
 
@@ -29,11 +30,11 @@ export const apiKeySchema = z.string().openapi({
 
 export const DatabaseCredentialsSchema = z.object({
   password: z.string(),
-  dbname: z.string(),
-  engine: z.string(),
-  port: z.number(),
-  dbInstanceIdentifier: z.string(),
-  host: z.string(),
+  // dbname: z.string(),
+  // engine: z.string(),
+  // port: z.number(),
+  // dbInstanceIdentifier: z.string(),
+  // host: z.string(),
   username: z.string(),
 });
 
@@ -51,4 +52,3 @@ export const zodErrorResponseSchema = z.object({
   name: z.literal("ZodError"),
   issues: z.array(zodIssueSchema),
 });
-
