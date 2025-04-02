@@ -65,12 +65,10 @@ During the deployment:
 - Upon completion, you'll receive confirmation of successful deployment along with important endpoints or access information for the created resources.
 - In particular, you will receive confirmation of the API Gateway URL and your specific API Access Key details. These details are required to connect to the API Gateway endpoints via our SDK client.
 
-### Step 5: Verify the Deployment
+### Step 5: Create the Database Table
 
-After successful deployment, verify that all components are working correctly:
-
-- Check the AWS Management Console to confirm resources have been created.
-- Test the image embedding functionality by uploading a sample image via our SDK client.
+- Run `npm run database:setup` from the top-level directory.
+- This will create your database table, properly deployed for optimised vector embedding.
 
 ### Step 6: Add AWS Access to Amazon Bedrock Foundation Models
 
@@ -86,7 +84,14 @@ At the time of writing, you will need to:
 - Select 'Next' then 'Submit'.
 - It may take several minutes to receive or remove access to models but, once access is granted, you should see 'Access granted' next to the model name.
 
-### Step 7 (if relevant and necessary): Destroy the Infrastructure
+### Step 7: Verify the Deployment
+
+After successful deployment, verify that all components are working correctly:
+
+- Check the AWS Management Console to confirm resources have been created.
+- Test the image embedding functionality by uploading a sample image via our SDK client.
+
+### Step 8 (if relevant and necessary): Destroy the Infrastructure
 
 When you no longer need the image-embedding pipeline, you can remove all deployed resources with `document-embedding destroy`.
 

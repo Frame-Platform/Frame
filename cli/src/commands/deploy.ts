@@ -3,6 +3,12 @@ import ora from "ora";
 import inquirer from "inquirer";
 import dotenv from "dotenv";
 import { execCommand } from "../utils/execCommand.js";
+import { extractDatabaseEndpoint } from "../utils/extractDatabaseEndpoint.js";
+import {
+  extractAPIEndpoint,
+  extractAPIKey,
+} from "../utils/extractAPIDetails.js";
+import { addEnvironmentVariables } from "../utils/config-manager.js";
 
 // Load environment variables
 dotenv.config();
@@ -79,32 +85,30 @@ export async function deployCommand(options: any) {
       process.exit(1);
     }
 
-    // Display API Endpoint and API Key to user
-    let apiEndpoint: string | null = null;
-    let apiKeyId: string | null = null;
-    const apiEndpointMatch = stderr.match(
-      /ApiStack\.ApiEndpoint\s*=\s*(https:\/\/[^\s]+)/
-    );
-    if (apiEndpointMatch && apiEndpointMatch[1]) {
-      apiEndpoint = apiEndpointMatch[1];
-    }
-    const apiKeyMatch = stderr.match(/ApiStack\.ApiKeyId\s*=\s*([a-z0-9]+)/);
-    if (apiKeyMatch && apiKeyMatch[1]) {
-      apiKeyId = apiKeyMatch[1];
-    }
+    const databaseEndpoint = extractDatabaseEndpoint(stderr);
+    addEnvironmentVariables({ DATABASE_HOST: databaseEndpoint });
+
+    const apiEndpoint = extractAPIEndpoint(stderr);
+    const apiKeyId = extractAPIKey(stderr);
+
     console.log(
       chalk.white.yellow(
-        "Before proceeding to use the SDK, please ensure that you have allowed access to Amazon Bedrock Foundation Models in the AWS console. Details of how to do so can be found in the README.md file associated with the CLI.\n"
+        "Before proceeding to use the SDK, please ensure that you have allowed access to Amazon Bedrock Foundation Models in the AWS console. Details of how to do so can be found in the README.md file associated with the CLI / CDK.\n"
       )
     );
     console.log(chalk.white.bold("API Information:"));
     console.log(chalk.white("API Endpoint:"), chalk.cyan(apiEndpoint));
     console.log(chalk.white("API Key ID:"), chalk.cyan(apiKeyId));
     console.log(
-      chalk.white("\nUse this API key in your requests with the header:"),
-      chalk.cyan("x-api-key")
+      chalk.white(
+        "\nNavigate to the AWS console to find the API Key associated with this ID and use the API Endpoint and API Key to connect to the SDK:"
+      ),
+      chalk.cyan(
+        "See SDK Documentation for Additional Information and Guidance"
+      )
     );
 
+    /*
     // Generate SDK configuration (optional)
     console.log(
       chalk.white(
@@ -121,6 +125,7 @@ const client = new DocumentEmbeddingClient({
 });
       `)
     );
+    */
   } catch (error) {
     console.error(chalk.red("\nDeployment failed:"));
     console.error(
