@@ -20,7 +20,7 @@ import { z } from "zod" /*"@hono/zod-openapi"*/;
 // Function to retrieve and parse database credentials
 const getDatabaseCredentials = async (
   secretName: string,
-  region: string
+  region: string,
 ): Promise<DatabaseCredentials> => {
   const client = new SecretsManagerClient({
     region: region,
@@ -31,7 +31,7 @@ const getDatabaseCredentials = async (
       new GetSecretValueCommand({
         SecretId: secretName,
         VersionStage: "AWSCURRENT",
-      })
+      }),
     );
 
     if (!response.SecretString) {
@@ -49,7 +49,7 @@ const getDatabaseCredentials = async (
       console.error(`Error retrieving database credentials: ${error.message}`);
     } else {
       console.error(
-        "Unknown error occurred while retrieving database credentials"
+        "Unknown error occurred while retrieving database credentials",
       );
     }
     throw error;
@@ -88,32 +88,6 @@ export const pgConnect = async () => {
   }
 };
 
-/*
-let pgClient: null | Client = null;
-
-export const pgConnect = async () => {
-  try {
-    if (pgClient) return pgClient;
-
-    pgClient = new Client({
-      host: process.env.HOST_NAME,
-      port: Number(process.env.PORT) || 5432,
-      database: process.env.DB_NAME,
-      user: process.env.POSTGRES_USER,
-      password: process.env.POSTGRES_PASSWORD,
-      ssl: {
-        rejectUnauthorized: false,
-      },
-    });
-
-    await pgClient.connect();
-    return pgClient;
-  } catch (e) {
-    throw new Error(`Error connecting to database: ${e}`);
-  }
-};
-*/
-
 export const callTitan = async (payload: TitanInputType) => {
   try {
     const bedrockClient = new BedrockRuntimeClient({
@@ -136,19 +110,19 @@ export const downloadImage = async (url: string) => {
     res = await fetch(url);
   } catch (e) {
     throw new ImageValidationError(
-      `Failed downloading image ${url}, Error: ${e}`
+      `Failed downloading image ${url}, Error: ${e}`,
     );
   }
 
   if (!res.ok) {
     throw new ImageValidationError(
-      `Non 200 response for url ${url}, status:${res.status} ${res.statusText}`
+      `Non 200 response for url ${url}, status:${res.status} ${res.statusText}`,
     );
   }
   const contentType = res.headers.get("content-type");
   if (!contentType || !["image/png", "image/jpeg"].includes(contentType)) {
     throw new ImageValidationError(
-      `Invalid content-type ${contentType} for url ${url}.`
+      `Invalid content-type ${contentType} for url ${url}.`,
     );
   }
 

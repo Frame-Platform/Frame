@@ -27,7 +27,6 @@ export const handler = async (
       imagePayload = { inputImage: resizedBuffer.toString("base64") };
     }
 
-    // gather titan inputs
     const textPayload = description ? { inputText: description } : {};
     const payload: TitanInputType = { ...imagePayload, ...textPayload };
 
@@ -41,10 +40,11 @@ export const handler = async (
           id,
           url,
           description,
+          metadata,
           timestamp,
           1 - (embedding <=> $1::vector) AS score
       FROM
-          documents
+          documents4
       WHERE
           1 - (embedding <=> $1::vector) >= $2
       ORDER BY
