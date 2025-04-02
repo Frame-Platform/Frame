@@ -5,9 +5,8 @@ async function setupDatabase() {
   try {
     // Get configuration from environment or .env file
     const dbName = process.env.POSTGRES_DB_NAME || "postgres";
-    const tableName = process.env.POSTGRES_TABLE_NAME || "documents";
 
-    console.log(`Setting up database ${dbName} with table ${tableName}`);
+    console.log(`Setting up database ${dbName} with table named "documents"`);
 
     console.log(`Connecting to database at ${process.env.DATABASE_HOST}...`);
     const client = new Client({
@@ -24,11 +23,11 @@ async function setupDatabase() {
 
     // Execute SQL
     console.log("Executing database setup SQL...");
-    await client.query(`DROP TABLE IF EXISTS "${tableName}"`);
+    await client.query(`DROP TABLE IF EXISTS documents`);
     await client.query(`CREATE EXTENSION IF NOT EXISTS vector`);
     await client.query(
       `
-      CREATE TABLE "${tableName}" (
+      CREATE TABLE documents (
         id serial PRIMARY KEY,
         url TEXT,
         description TEXT,
@@ -39,7 +38,7 @@ async function setupDatabase() {
     `
     );
     await client.query(
-      `CREATE INDEX ON "${tableName}" USING hnsw (embedding vector_cosine_ops)`
+      `CREATE INDEX ON documents USING hnsw (embedding vector_cosine_ops)`
     );
     console.log("Database table created successfully");
     client.end();
