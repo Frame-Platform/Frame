@@ -17,6 +17,7 @@ export class Client {
     this.apiKey = apiKey;
     this.baseURL = baseURL;
   }
+
   public async getDocuments(
     params: SDKTypes.GetDocumentsParams = {}
   ): Promise<SDKTypes.APIResponse> {
@@ -44,7 +45,39 @@ export class Client {
         data: data,
       };
     } catch (error: unknown) {
-      // just handling client-side errors (url endpoint is wrong, network failure)
+      return {
+        status: 0,
+        ok: false,
+        data: {
+          error:
+            error instanceof Error
+              ? error.message
+              : "Unknown client error occurred",
+        },
+      };
+    }
+  }
+
+  public async getDocumentById(
+    id: string | number
+  ): Promise<SDKTypes.APIResponse> {
+    try {
+      const response = await fetch(`${this.baseURL}/document/${id}`, {
+        method: "GET",
+        headers: {
+          "x-api-key": this.apiKey,
+          Accept: "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      return {
+        status: response.status,
+        ok: response.ok,
+        data: data,
+      };
+    } catch (error: unknown) {
       return {
         status: 0,
         ok: false,

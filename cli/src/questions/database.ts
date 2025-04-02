@@ -1,5 +1,5 @@
 import inquirer from "inquirer";
-import { displayPostgresInstructions } from "../utils/displayPostgresInstructions.js";
+// import { displayPostgresInstructions } from "../utils/displayPostgresInstructions.js";
 
 export const databaseQuestions = async () => {
   const postgres = await inquirer.prompt([
@@ -86,6 +86,7 @@ export const databaseQuestions = async () => {
       validate: (input) =>
         input.trim() !== "" || "Database Name cannot be empty.",
     },
+    /*
     {
       type: "input",
       name: "tableName",
@@ -93,9 +94,10 @@ export const databaseQuestions = async () => {
       default: "documents",
       validate: (input) => input.trim() !== "" || "Table Name cannot be empty.",
     },
+    */
   ]);
 
-  displayPostgresInstructions(postgres.tableName);
+  // displayPostgresInstructions(postgres.tableName);
 
   return postgres;
 };

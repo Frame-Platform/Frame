@@ -29,7 +29,7 @@ export async function initCommand() {
       postgres_user: postgres.user,
       postgres_password: postgres.password,
       postgres_db_name: postgres.dbName,
-      postgres_table_name: postgres.tableName,
+      // postgres_table_name: postgres.tableName,
       initialized: true,
       createdAt: new Date().toISOString(),
     };

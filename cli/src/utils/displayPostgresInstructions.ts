@@ -1,3 +1,4 @@
+/*
 import chalk from "chalk";
 
 export const displayPostgresInstructions = (tableName: string) => {
@@ -32,3 +33,4 @@ CREATE INDEX ON documents USING hnsw (embedding vector_cosine_ops);
   );
   console.log(chalk.blue(sqlCode));
 };
+*/
