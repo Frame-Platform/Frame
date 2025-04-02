@@ -23,11 +23,11 @@ export class ImageValidationError extends Error {}
 
 export const DatabaseCredentialsSchema = z.object({
   password: z.string(),
-  dbname: z.string(),
-  engine: z.string(),
-  port: z.number(),
-  dbInstanceIdentifier: z.string(),
-  host: z.string(),
+  // dbname: z.string(),
+  // engine: z.string(),
+  // port: z.number(),
+  // dbInstanceIdentifier: z.string(),
+  // host: z.string(),
   username: z.string(),
 });
 
