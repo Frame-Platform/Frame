@@ -2,27 +2,28 @@ import {
   BedrockRuntimeClient,
   InvokeModelCommand,
 } from "@aws-sdk/client-bedrock-runtime";
-import { Client } from "pg";
-import dotenv from "dotenv";
-import sharp from "sharp";
 import {
   TitanInputType,
   DatabaseCredentials,
   DatabaseCredentialsSchema,
+  DocPayloadType,
 } from "./types";
 import {
   SecretsManagerClient,
   GetSecretValueCommand,
   GetSecretValueCommandOutput,
 } from "@aws-sdk/client-secrets-manager";
+
+import { Client } from "pg";
+import sharp from "sharp";
 import { z } from "zod" /*"@hono/zod-openapi"*/;
 
-dotenv.config();
+let pgClient: null | Client = null;
 
 // Function to retrieve and parse database credentials
 const getDatabaseCredentials = async (
   secretName: string,
-  region: string
+  region: string,
 ): Promise<DatabaseCredentials> => {
   const client = new SecretsManagerClient({
     region: region,
@@ -33,7 +34,7 @@ const getDatabaseCredentials = async (
       new GetSecretValueCommand({
         SecretId: secretName,
         VersionStage: "AWSCURRENT",
-      })
+      }),
     );
 
     if (!response.SecretString) {
@@ -51,7 +52,7 @@ const getDatabaseCredentials = async (
       console.error(`Error retrieving database credentials: ${error.message}`);
     } else {
       console.error(
-        "Unknown error occurred while retrieving database credentials"
+        "Unknown error occurred while retrieving database credentials",
       );
     }
     throw error;
@@ -92,59 +93,48 @@ export const pgConnect = async () => {
 
 export const pgInsert = async (
   embedding: number[],
-  pgClient: Client,
-  url?: string | null,
-  description?: string | null
+  document: DocPayloadType,
 ): Promise<void> => {
   try {
-    /*
-    // this should be removed eventually
-    await pgClient.query("CREATE EXTENSION IF NOT EXISTS vector");
-    await pgClient.query(`CREATE TABLE IF NOT EXISTS documents (
-                                id SERIAL PRIMARY KEY,
-                                embedding vector(1024) NOT NULL,
-                                url TEXT,
-                                description TEXT,
-                                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                CONSTRAINT unique_url_desc UNIQUE (url, description)
-                                )`);
-    */
+    let { url, description, metadata } = document;
+    if (!pgClient) {
+      pgClient = await pgConnect();
+    }
 
-    if (await documentExists(pgClient, url, description)) return;
+    await pgClient.query(`
+      CREATE EXTENSION IF NOT EXISTS vector;
+      CREATE TABLE IF NOT EXISTS documents4 (
+        id SERIAL PRIMARY KEY,
+        embedding vector(1024) NOT NULL,
+        url TEXT,
+        description TEXT,
+        metadata JSON,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        url_for_constraint TEXT GENERATED ALWAYS AS (COALESCE(url, '__null__')) STORED,
+        desc_for_constraint TEXT GENERATED ALWAYS AS (COALESCE(description, '__null__')) STORED,
+        CONSTRAINT unique_url_desc_constraint UNIQUE (url_for_constraint, desc_for_constraint)
+      );
+    `);
 
     const query = `
-              INSERT INTO documents (embedding, url, description)
-              VALUES ($1, $2, $3)
-              ON CONFLICT (url, description) DO NOTHING
-          `;
-    // if url or description is undefined, row will have a NULL value
-    await pgClient.query(query, [JSON.stringify(embedding), url, description]);
-    await pgClient.query(
-      `SELECT setval('documents_id_seq', (SELECT MAX(id) FROM documents));`
-    );
+      INSERT INTO documents4 (embedding, url, description, metadata)
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT ON CONSTRAINT unique_url_desc_constraint DO NOTHING;
+    `;
+
+    await pgClient.query(query, [
+      JSON.stringify(embedding),
+      url,
+      description,
+      metadata,
+    ]);
+    // await pgClient.query(
+    //   `SELECT setval('documents_id_seq', (SELECT MAX(id) FROM documents3));`,
+    // );
+
   } catch (e) {
     throw new Error(`Error inserting document into database: ${e}`);
   }
-};
-
-const documentExists = async (
-  pgClient: Client,
-  url?: string | null,
-  description?: string | null
-) => {
-  const { rows } = await pgClient.query(
-    `
-      SELECT 1
-      FROM documents
-      WHERE
-        (url = $1 OR ($1 IS NULL AND url IS NULL)) AND
-        (description = $2 OR ($2 IS NULL AND description IS NULL))
-      LIMIT 1;
-    `,
-    [url, description]
-  );
-
-  return rows.length > 0 ? true : false;
 };
 
 export const resizeImageToLimit = async (
