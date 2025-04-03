@@ -100,6 +100,18 @@ export class Client {
     );
   }
 
+  public searchDocuments(
+    documents: SDK.SearchRequest
+  ): Promise<SDK.APIResponse<SDK.SearchDocumentResponse>> {
+
+    return this.request<SDK.SearchDocumentResponse>(
+      `/search`,
+      "POST",
+      undefined,
+      { ...documents }
+    );;
+  }
+
   //   public async getDocuments(
   //     params: SDK.GetDocumentsParams = {}
   //   ): Promise<SDK.APIResponse<SDK.GetDocumentsResponse>> {
