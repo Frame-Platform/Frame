@@ -50,7 +50,7 @@ export const pgDeleteDocument = async (id: number) => {
     const query = `
       DELETE FROM documents4
       WHERE id = $1
-      RETURNING id, url, description;
+      RETURNING id, url, description, metadata;
     `;
 
     return await pgClient.query(query, [id]);
@@ -62,7 +62,7 @@ export const pgDeleteDocument = async (id: number) => {
 const formatResult = (
   success: boolean,
   errors: string | null | undefined,
-  { url, description, metadata }: BaseDocumentType,
+  { url, description, metadata }: BaseDocumentType
 ) => ({
   success,
   ...(errors && { errors }),
@@ -108,7 +108,7 @@ export async function sendToSQS(documents: BaseDocumentType[]) {
         Failed.forEach((entry) => {
           const doc = documents[Number(entry.Id)];
           docSendResult.push(
-            formatResult(false, entry.Message || "Unknown Error", doc),
+            formatResult(false, entry.Message || "Unknown Error", doc)
           );
         });
       }
