@@ -5,13 +5,16 @@ import {
   deleteDocumentRoute,
   getDocumentByIdRoute,
   getDocumentsRoute,
+  recommendRoute,
 } from ".";
 import {
   validateImage,
   pgGetDocuments,
   pgGetById,
+  pgGetEmbedding,
   pgDeleteDocument,
   sendToSQS,
+  pgGetRecommendations,
 } from "./services";
 
 export const getDocumentsHandler: RouteHandler<
@@ -28,7 +31,7 @@ export const getDocumentsHandler: RouteHandler<
         offset,
         count: documents.length,
       },
-      200,
+      200
     );
   } catch (e) {
     console.log(`Error in getDocumentsHandler: ${e}`);
@@ -62,13 +65,13 @@ export const createDocumentHandler: RouteHandler<
     const { documents } = c.req.valid("json");
     const [descOnlyDocuments, urlDocuments] = partition(
       documents,
-      ({ url, description }) => !!(!url && description),
+      ({ url, description }) => !!(!url && description)
     );
 
     const validatedImages = await Promise.all(urlDocuments.map(validateImage));
     const [validImages, invalidImages] = partition(
       validatedImages,
-      (doc) => doc.success,
+      (doc) => doc.success
     );
 
     const validDocuments = [...descOnlyDocuments, ...validImages];
@@ -96,6 +99,40 @@ export const deleteDocumentHandler: RouteHandler<
     return c.json({ document: queryResult.rows[0] }, 200);
   } catch (e) {
     console.log(`Error in deleteDocumentHandler: ${e}`);
+    return c.json({ error: "Internal Server Error." }, 500);
+  }
+};
+
+export const recommendHandler: RouteHandler<typeof recommendRoute> = async (
+  c
+) => {
+  try {
+    const { id } = c.req.valid("param");
+    const { topK = 10, threshold = 0 } = c.req.valid("json");
+    const embeddingResult = await pgGetEmbedding(id);
+
+    if (embeddingResult.rows.length === 0) {
+      return c.json({ error: `Document Not Found` }, 404);
+    }
+
+    const documentEmbedding = embeddingResult.rows[0].embedding;
+
+    const recommendedDocuments = await pgGetRecommendations(
+      documentEmbedding,
+      id,
+      threshold,
+      topK
+    );
+
+    return c.json(
+      {
+        hits: recommendedDocuments.rows,
+        count: recommendedDocuments.rows.length,
+      },
+      200
+    );
+  } catch (e) {
+    console.log(`Error in recommendHandler: ${e}`);
     return c.json({ error: "Internal Server Error." }, 500);
   }
 };

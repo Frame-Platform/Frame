@@ -15,12 +15,11 @@ import {
   GetSecretValueCommand,
   GetSecretValueCommandOutput,
 } from "@aws-sdk/client-secrets-manager";
-import { z } from "zod" /*"@hono/zod-openapi"*/;
+import { z } from "zod";
 
-// Function to retrieve and parse database credentials
 const getDatabaseCredentials = async (
   secretName: string,
-  region: string,
+  region: string
 ): Promise<DatabaseCredentials> => {
   const client = new SecretsManagerClient({
     region: region,
@@ -31,7 +30,7 @@ const getDatabaseCredentials = async (
       new GetSecretValueCommand({
         SecretId: secretName,
         VersionStage: "AWSCURRENT",
-      }),
+      })
     );
 
     if (!response.SecretString) {
@@ -49,7 +48,7 @@ const getDatabaseCredentials = async (
       console.error(`Error retrieving database credentials: ${error.message}`);
     } else {
       console.error(
-        "Unknown error occurred while retrieving database credentials",
+        "Unknown error occurred while retrieving database credentials"
       );
     }
     throw error;
@@ -110,19 +109,19 @@ export const downloadImage = async (url: string) => {
     res = await fetch(url);
   } catch (e) {
     throw new ImageValidationError(
-      `Failed downloading image ${url}, Error: ${e}`,
+      `Failed downloading image ${url}, Error: ${e}`
     );
   }
 
   if (!res.ok) {
     throw new ImageValidationError(
-      `Non 200 response for url ${url}, status:${res.status} ${res.statusText}`,
+      `Non 200 response for url ${url}, status:${res.status} ${res.statusText}`
     );
   }
   const contentType = res.headers.get("content-type");
   if (!contentType || !["image/png", "image/jpeg"].includes(contentType)) {
     throw new ImageValidationError(
-      `Invalid content-type ${contentType} for url ${url}.`,
+      `Invalid content-type ${contentType} for url ${url}.`
     );
   }
 

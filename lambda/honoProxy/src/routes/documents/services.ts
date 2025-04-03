@@ -44,6 +44,55 @@ export const pgGetById = async (id: string | number) => {
   }
 };
 
+export const pgGetEmbedding = async (id: string | number) => {
+  try {
+    const pgClient = await pgConnect();
+
+    const query = `
+      SELECT embedding
+      FROM documents4
+      WHERE id = $1;
+    `;
+
+    return await pgClient.query(query, [id]);
+  } catch (e) {
+    throw new Error(`Error getting document by id: ${e}`);
+  }
+};
+
+export const pgGetRecommendations = async (
+  embedding: number[],
+  id: number,
+  threshold: number,
+  topK: number
+) => {
+  try {
+    const pgClient = await pgConnect();
+
+    const query = `
+    SELECT
+        id,
+        url,
+        description,
+        metadata,
+        timestamp,
+        1 - (embedding <=> $1::vector) AS score
+    FROM
+        documents4
+    WHERE
+        id != $2 AND
+        1 - (embedding <=> $1::vector) >= $3
+    ORDER BY
+        score DESC
+    LIMIT $4;
+    `;
+
+    return await pgClient.query(query, [embedding, id, threshold, topK]);
+  } catch (e) {
+    throw new Error(`Error getting similar documents: ${e}`);
+  }
+};
+
 export const pgDeleteDocument = async (id: number) => {
   try {
     const pgClient = await pgConnect();

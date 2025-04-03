@@ -1,6 +1,5 @@
 import { z } from "@hono/zod-openapi";
 import { baseDocumentSchema } from "../sharedSchemas";
-
 import {
   VALID_IMAGE_TYPES,
   MAX_IMAGE_SIZE,
@@ -19,7 +18,7 @@ export const documentSchema = baseDocumentSchema.refine(
   (data) => data.url || data.description,
   {
     message: "At least one of url or description must be provided.",
-  },
+  }
 );
 
 export const documentReturnSchema = baseDocumentSchema.extend({
@@ -35,14 +34,14 @@ export const paginationSchema = z.object({
     })
     .default(DEFAULT_PAGINATION_LIMIT)
     .describe(
-      `Number of items to return (max ${MAX_PAGINATION_LIMIT}, default ${DEFAULT_PAGINATION_LIMIT})`,
+      `Number of items to return (max ${MAX_PAGINATION_LIMIT}, default ${DEFAULT_PAGINATION_LIMIT})`
     ),
   offset: z.coerce
     .number()
     .min(0, { message: "Offset must be 0 or greater." })
     .default(0)
     .describe(
-      "Number of items to skip before starting to collect the result set (default 0)",
+      "Number of items to skip before starting to collect the result set (default 0)"
     ),
 });
 
@@ -63,4 +62,31 @@ export const imageResponseSchema = z.object({
     .refine((val) => val < MAX_IMAGE_SIZE, {
       message: "File size exceeds the limit of 5 MB.",
     }),
+});
+
+export const recommendRequestSchema = z.object({
+  threshold: z.coerce
+    .number()
+    .min(0, "Threshold must be at least 0")
+    .max(1, "Threshold must be at most 1")
+    .default(0)
+    .openapi({
+      description:
+        "Cosine similarity threshold (between 0 and 1). Results with a similarity below this value will be excluded.",
+    }),
+  topK: z.coerce
+    .number()
+    .max(MAX_PAGINATION_LIMIT, {
+      message: `topK must not exceed ${MAX_PAGINATION_LIMIT}`,
+    })
+    .default(10)
+    .openapi({
+      description: `The maximum number of top results to return. Must not exceed ${MAX_PAGINATION_LIMIT}.`,
+    }),
+});
+
+export const recommendResultSchema = baseDocumentSchema.extend({
+  id: z.number(),
+  timestamp: z.string(),
+  score: z.number(),
 });

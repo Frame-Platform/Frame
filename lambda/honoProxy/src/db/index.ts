@@ -12,7 +12,6 @@ import { z } from "@hono/zod-openapi";
 
 let pgClient: null | Client = null;
 
-// Function to retrieve and parse database credentials
 const getDatabaseCredentials = async (
   secretName: string,
   region: string
