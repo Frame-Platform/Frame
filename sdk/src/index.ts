@@ -103,149 +103,23 @@ export class Client {
   public searchDocuments(
     documents: SDK.SearchRequest
   ): Promise<SDK.APIResponse<SDK.SearchDocumentResponse>> {
-
     return this.request<SDK.SearchDocumentResponse>(
       `/search`,
       "POST",
       undefined,
       { ...documents }
-    );;
+    );
   }
 
-  //   public async getDocuments(
-  //     params: SDK.GetDocumentsParams = {}
-  //   ): Promise<SDK.APIResponse<SDK.GetDocumentsResponse>> {
-  //     try {
-  //       const url = new URL(`${this.baseURL}/document`);
-
-  //       Object.entries(params).forEach(([key, value]) => {
-  //         if (value !== undefined && value !== null) {
-  //           url.searchParams.append(key, value.toString());
-  //         }
-  //       });
-
-  //       const response = await fetch(url.toString(), {
-  //         method: "GET",
-  //         headers: {
-  //           "x-api-key": this.apiKey,
-  //         },
-  //       });
-
-  //       const data = await response.json();
-
-  //       if (!response.ok) {
-  //         return {
-  //           ok: false,
-  //           status: response.status,
-  //           error: data.error || data,
-  //         };
-  //       } else {
-  //         return {
-  //           ok: true,
-  //           status: response.status,
-  //           data,
-  //         };
-  //       }
-  //     } catch (error: unknown) {
-  //       return {
-  //         status: 0,
-  //         ok: false,
-  //         error:
-  //           error instanceof Error
-  //             ? error.message
-  //             : "Unknown client error occurred",
-  //       };
-  //     }
-  //   }
-
-  //   public async getDocumentById(
-  //     id: SDK.GetDocumentByIdParams
-  //   ): Promise<SDK.APIResponse<SDK.GetDocumentByIdResponse>> {
-  //     try {
-  //       const response = await fetch(`${this.baseURL}/document/${id}`, {
-  //         method: "GET",
-  //         headers: {
-  //           "x-api-key": this.apiKey,
-  //           Accept: "application/json",
-  //         },
-  //       });
-
-  //       const data = await response.json();
-
-  //       if (!response.ok) {
-  //         return {
-  //           ok: false,
-  //           status: response.status,
-  //           error: data.error || data,
-  //         };
-  //       } else {
-  //         return {
-  //           ok: true,
-  //           status: response.status,
-  //           data,
-  //         };
-  //       }
-  //     } catch (error: unknown) {
-  //       return {
-  //         status: 0,
-  //         ok: false,
-  //         error:
-  //           error instanceof Error
-  //             ? error.message
-  //             : "Unknown client error occurred",
-  //       };
-  //     }
-  //   }
-  // }
-
-  // public async deleteDocumentById(
-  //   id: string | number
-  // ): Promise<SDK.APIResponse> {
-  //   try {
-  //     const response = await fetch(`${this.baseURL}/document/${id}`, {
-  //       method: "DELETE",
-  //       headers: {
-  //         "x-api-key": this.apiKey,
-  //         "Content-Type": "application/json",
-  //       },
-  //     });
-
-  //     const data = await response.json();
-
-  //     return {
-  //       status: response.status,
-  //       ok: response.ok,
-  //       data: data,
-  //     };
-  //   } catch (error: unknown) {
-  //     return {
-  //       status: 0,
-  //       ok: false,
-  //       data: {
-  //         error:
-  //           error instanceof Error
-  //             ? error.message
-  //             : "Unknown client error occurred",
-  //       },
-  //     };
-  //   }
+  public getRecommendations(
+    id: string | number,
+    options?: { topK?: number; threshold?: number }
+  ): Promise<SDK.APIResponse<SDK.GetRecommendationsResponse>> {
+    return this.request<SDK.GetRecommendationsResponse>(
+      `/document/${id}/recommend`,
+      "POST",
+      undefined,
+      options
+    );
+  }
 }
-
-// let client = new Client({
-//   apiKey: process.env.API_KEY!,
-//   baseURL: process.env.BASE_URL!,
-// });
-
-// const testFunction = async () => {
-//   const res1 = await client.getDocuments({ limit: -1 });
-//   if (!res1.ok) {
-//     console.log(res1.error);
-//     if (typeof res1.error !== "string") {
-//       res1.error.issues
-//     }
-//   } else {
-//     res1.data.documents[0].metadata;
-//   }
-// };
-
-// testFunction();

@@ -75,6 +75,18 @@ export interface CreateDocumentsResponse {
   metadata?: Record<string, any> | null;
 }
 
+export interface GetRecommendationsResponse {
+  hits: {
+    id: number;
+    url: string;
+    description: string;
+    metadata: Record<string, any> | null;
+    timestamp: string;
+    score: number;
+  };
+  count: number;
+}
+
 export interface Document {
   id: number;
   url?: string | null;

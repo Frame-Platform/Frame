@@ -337,29 +337,28 @@ describe("createDocuments", () => {
     }
   });
 
-  // test("should create a document with just a URL", async () => {
-  //   const documents = [
-  //     {
-  //       url: "https://media.newyorker.com/photos/59095c501c7a8e33fb38c107/master/pass/Monkey-Selfie-DailyShouts.jpg",
-  //       metadata: { test: "2" },
-  //     },
-  //   ];
+  test("should create a document with just a URL", async () => {
+    const documents = [
+      {
+        url: "https://media.newyorker.com/photos/59095c501c7a8e33fb38c107/master/pass/Monkey-Selfie-DailyShouts.jpg",
+        metadata: { test: "2" },
+      },
+    ];
 
-  //   const createdResponse = await client.createDocuments(documents);
+    const createdResponse = await client.createDocuments(documents);
 
-  //   console.log(createdResponse);
-  //   if (createdResponse.ok) {
-  //     expect(createdResponse.status).toBe(200);
-  //     expect(createdResponse.data[0].success).toBe(true);
-  //     expect(createdResponse.data[0].url).toBe(documents[0].url);
-  //   } else {
-  //     if (typeof createdResponse.error !== "string")
-  //       console.log(createdResponse.error.issues);
-  //     throw new Error(
-  //       `Expected a 200 creating a document but got ${createdResponse.status}`
-  //     );
-  //   }
-  // });
+    if (createdResponse.ok) {
+      expect(createdResponse.status).toBe(200);
+      expect(createdResponse.data[0].success).toBe(true);
+      expect(createdResponse.data[0].url).toBe(documents[0].url);
+    } else {
+      if (typeof createdResponse.error !== "string")
+        console.log(createdResponse.error.issues);
+      throw new Error(
+        `Expected a 200 creating a document but got ${createdResponse.status}`
+      );
+    }
+  });
 
   test("should create a document with just a description", async () => {
     const documents = [{ description: "Test3", metadata: { test: "3" } }];
@@ -380,15 +379,99 @@ describe("createDocuments", () => {
       );
     }
   });
+
+  test("should be able to upload 11+ documents", async () => {
+    const documents = [
+      {
+        url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        description: "naruto1",
+      },
+      {
+        url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        description: "naruto2",
+      },
+      {
+        url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        description: "naruto3",
+      },
+      {
+        url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        description: "naruto4",
+      },
+      {
+        url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        description: "naruto5",
+      },
+      {
+        url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        description: "naruto6",
+      },
+      {
+        url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        description: "naruto7",
+      },
+      {
+        url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        description: "naruto8",
+      },
+      {
+        url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        description: "naruto9",
+      },
+      {
+        url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        description: "naruto10",
+      },
+      {
+        url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        description: "naruto11",
+      },
+    ];
+
+    const response = await client.createDocuments(documents);
+
+    if (response.ok) {
+      expect(response.status).toBe(200);
+      expect(response.data[0].success).toBe(true);
+      for (let i = 0; i < documents.length; i++) {
+        expect(response.data[i].url).toBe(documents[i].url);
+        expect(response.data[i].description).toBe(documents[i].description);
+      }
+    } else {
+      throw new Error(
+        `Expected a 200 creating a document but got ${response.status}`
+      );
+    }
+  });
+
+  test("invalid image urls/images that fail to fetch will not work", async () => {
+    const documents = [
+      {
+        url: "www.fakeurl.com",
+      },
+    ];
+    const response = await client.createDocuments(documents);
+
+    if (!response.ok) {
+      expect(response.status).toBe(400);
+      if (typeof response.error !== "string") {
+        expect(response.error.name).toBe("ZodError");
+      }
+    } else {
+      throw new Error(
+        `Expected a 400 creating a document but got ${response.status}`
+      );
+    }
+  });
 });
 
 describe("searchDocuments", () => {
   test("Searches with all arguments (url, description, threshold and topK)", async () => {
     const documents = {
-      "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
-      "description": "An image of a monkey taking a selfie.",
-      "threshold": 0.75,
-      "topK": 12
+      url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+      description: "An image of a monkey taking a selfie.",
+      threshold: 0.75,
+      topK: 12,
     };
 
     const response = await client.searchDocuments(documents);
@@ -396,9 +479,9 @@ describe("searchDocuments", () => {
 
   test("Searches with all parameters BUT url", async () => {
     const documents = {
-      "description": "An image of a monkey taking a selfie.",
-      "threshold": 0.75,
-      "topK": 12
+      description: "An image of a monkey taking a selfie.",
+      threshold: 0.75,
+      topK: 12,
     };
 
     const response = await client.searchDocuments(documents);
@@ -406,9 +489,9 @@ describe("searchDocuments", () => {
 
   test("Searches with all parameters BUT description", async () => {
     const documents = {
-      "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
-      "threshold": 0.75,
-      "topK": 12
+      url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+      threshold: 0.75,
+      topK: 12,
     };
 
     const response = await client.searchDocuments(documents);
@@ -416,9 +499,9 @@ describe("searchDocuments", () => {
 
   test("Searches with all parameters BUT threshold", async () => {
     const documents = {
-      "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
-      "description": "An image of a monkey taking a selfie.",
-      "topK": 12
+      url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+      description: "An image of a monkey taking a selfie.",
+      topK: 12,
     };
 
     const response = await client.searchDocuments(documents);
@@ -426,60 +509,60 @@ describe("searchDocuments", () => {
 
   test("Searches with all parameters BUT topK", async () => {
     const documents = {
-      "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
-      "description": "An image of a monkey taking a selfie.",
-      "threshold": 0.75,
+      url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+      description: "An image of a monkey taking a selfie.",
+      threshold: 0.75,
     };
 
     const response = await client.searchDocuments(documents);
   });
 
-    test("Searches with JUST URL", async () => {
-      const documents = {
-        "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie."
-      };
+  test("Searches with JUST URL", async () => {
+    const documents = {
+      url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.",
+    };
 
-      const response = await client.searchDocuments(documents);
-    });
+    const response = await client.searchDocuments(documents);
+  });
 
-     test("Searches with JUST DESCRIPTION", async () => {
-      const documents = {
-        "description": "An image of a monkey taking a selfie.",
-      };
+  test("Searches with JUST DESCRIPTION", async () => {
+    const documents = {
+      description: "An image of a monkey taking a selfie.",
+    };
 
-      const response = await client.searchDocuments(documents);
-    });
+    const response = await client.searchDocuments(documents);
+  });
 
-    /* think this should throw an error OR fail, but it passes */
-    test("Searches with a NEGATIVE number for threshold", async () => {
-      const documents = {
-        "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
-        "description": "An image of a monkey taking a selfie.",
-        "threshold": -0.75,
-        "topK": 12
-      };
+  /* think this should throw an error OR fail, but it passes */
+  test("Searches with a NEGATIVE number for threshold", async () => {
+    const documents = {
+      url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+      description: "An image of a monkey taking a selfie.",
+      threshold: -0.75,
+      topK: 12,
+    };
 
-      const response = await client.searchDocuments(documents);
-    });
+    const response = await client.searchDocuments(documents);
+  });
 
-    test("Searches with a NEGATIVE number for topK", async () => {
-      const documents = {
-        "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
-        "description": "An image of a monkey taking a selfie.",
-        "threshold": 0.75,
-        "topK": -10
-      };
-      try {
-        await client.searchDocuments(documents);
-        // If it doesn't throw an error, fail the test
-        fail("Expected method to throw an error with negative topK");
-      } catch (error) {
-        // Test passes if an error is thrown
-        expect(error).toBeDefined();
-        // Optionally check for specific error properties
-        // expect(error.message).toContain("topK must be positive");
-      }
-    });
+  test("Searches with a NEGATIVE number for topK", async () => {
+    const documents = {
+      url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+      description: "An image of a monkey taking a selfie.",
+      threshold: 0.75,
+      topK: -10,
+    };
+    try {
+      await client.searchDocuments(documents);
+      // If it doesn't throw an error, fail the test
+      fail("Expected method to throw an error with negative topK");
+    } catch (error) {
+      // Test passes if an error is thrown
+      expect(error).toBeDefined();
+      // Optionally check for specific error properties
+      // expect(error.message).toContain("topK must be positive");
+    }
+  });
 });
 
 /*
@@ -488,3 +571,73 @@ Notes:
 - extra
 - optional missing
 */
+
+describe("getRecommendations", () => {
+  test("should fetch recommendations for a document based on id", async () => {
+    const getAllResponse = await client.getDocuments();
+    if (getAllResponse.ok) {
+      const id = getAllResponse.data.documents[0].id;
+
+      const response = await client.getRecommendations(id);
+
+      if (response.ok) {
+        expect(response.status).toBe(200);
+        expect(response.data).toHaveProperty("hits");
+      } else {
+        throw new Error(
+          `Expected a 200 response getting recommendations but got ${response.status}`
+        );
+      }
+    } else {
+      throw new Error(
+        `Expected a 200 response getting all documents but got ${getAllResponse.status}`
+      );
+    }
+  });
+
+  test("optional parameters topK and threshold should work", async () => {
+    const getAllResponse = await client.getDocuments();
+    if (getAllResponse.ok) {
+      const id = getAllResponse.data.documents[0].id;
+      const topK = 1;
+      const threshold = 0.3;
+
+      const response = await client.getRecommendations(id, { topK, threshold });
+
+      if (response.ok) {
+        expect(response.status).toBe(200);
+        expect(response.data).toHaveProperty("hits");
+        expect(response.data.count).toBe(topK);
+        expect(response.data.hits[0].score).toBeGreaterThanOrEqual(threshold);
+      } else {
+        throw new Error(
+          `Expected a 200 response getting recommendations but got ${response.status}`
+        );
+      }
+    } else {
+      throw new Error(
+        `Expected a 200 response getting all documents but got ${getAllResponse.status}`
+      );
+    }
+  });
+
+  test("querying id that doesn't exist in the db should return 404", async () => {
+    const response = await client.getRecommendations(10000);
+
+    expect(response.status).toBe(404);
+    expect(response.ok).toBe(false);
+  });
+
+  test("querying with a negative id is invalid", async () => {
+    const response = await client.getRecommendations(-1);
+
+    expect(response.status).toBe(400);
+    expect(response.ok).toBe(false);
+
+    if (!response.ok && typeof response.error !== "string") {
+      expect(response.error.name).toBe("ZodError");
+    } else {
+      throw new Error(`Expected a 400 ZodError but got ${response.status}`);
+    }
+  });
+});
