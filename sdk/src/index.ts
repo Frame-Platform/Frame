@@ -1,4 +1,4 @@
-import * as SDKTypes from "./types";
+import * as SDK from "./types";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -7,7 +7,7 @@ export class Client {
   private apiKey: string;
   private baseURL: string;
 
-  constructor({ apiKey, baseURL }: SDKTypes.ClientConfig) {
+  constructor({ apiKey, baseURL }: SDK.ClientConfig) {
     if (!apiKey) {
       throw new Error("API key is required to initialize the Client.");
     }
@@ -22,8 +22,8 @@ export class Client {
     path: string,
     method: "GET" | "POST" | "DELETE",
     params?: Record<string, unknown>,
-    body?: Record<string, unknown>
-  ): Promise<SDKTypes.APIResponse<T>> {
+    body?: unknown
+  ): Promise<SDK.APIResponse<T>> {
     try {
       const url = new URL(`${this.baseURL}${path}`);
 
@@ -38,12 +38,12 @@ export class Client {
       const headers: HeadersInit = {
         "x-api-key": this.apiKey,
         Accept: "application/json",
-        ...(body && { "Content-Type": "application/json" }),
+        ...(body ? { "Content-Type": "application/json" } : {}),
       };
       const options: RequestInit = {
         method,
         headers,
-        ...(body && { body: JSON.stringify(body) }),
+        ...(body ? { body: JSON.stringify(body) } : {}),
       };
 
       const response = await fetch(url.toString(), options);
@@ -69,36 +69,40 @@ export class Client {
   }
 
   public getDocuments(
-    params: SDKTypes.GetDocumentsParams = {}
-  ): Promise<SDKTypes.APIResponse<SDKTypes.GetDocumentsResponse>> {
-    return this.request<SDKTypes.GetDocumentsResponse>(
-      "/document",
-      "GET",
-      params
-    );
+    params: SDK.GetDocumentsParams = {}
+  ): Promise<SDK.APIResponse<SDK.GetDocumentsResponse>> {
+    return this.request<SDK.GetDocumentsResponse>("/document", "GET", params);
   }
 
   public getDocumentById(
     id: string | number
-  ): Promise<SDKTypes.APIResponse<SDKTypes.GetDocumentByIdResponse>> {
-    return this.request<SDKTypes.GetDocumentByIdResponse>(
-      `/document/${id}`,
-      "GET"
-    );
+  ): Promise<SDK.APIResponse<SDK.GetDocumentByIdResponse>> {
+    return this.request<SDK.GetDocumentByIdResponse>(`/document/${id}`, "GET");
   }
 
   public deleteDocumentById(
     id: string | number
-  ): Promise<SDKTypes.APIResponse<SDKTypes.DeleteDocumentByIdResponse>> {
-    return this.request<SDKTypes.DeleteDocumentByIdResponse>(
+  ): Promise<SDK.APIResponse<SDK.DeleteDocumentByIdResponse>> {
+    return this.request<SDK.DeleteDocumentByIdResponse>(
       `/document/${id}`,
       "DELETE"
     );
   }
 
+  public createDocuments(
+    documents: SDK.CreateDocumentsParams[]
+  ): Promise<SDK.APIResponse<SDK.CreateDocumentsResponse>> {
+    return this.request<SDK.CreateDocumentsResponse>(
+      `/document`,
+      "POST",
+      undefined,
+      { documents: documents }
+    );
+  }
+
   //   public async getDocuments(
-  //     params: SDKTypes.GetDocumentsParams = {}
-  //   ): Promise<SDKTypes.APIResponse<SDKTypes.GetDocumentsResponse>> {
+  //     params: SDK.GetDocumentsParams = {}
+  //   ): Promise<SDK.APIResponse<SDK.GetDocumentsResponse>> {
   //     try {
   //       const url = new URL(`${this.baseURL}/document`);
 
@@ -143,8 +147,8 @@ export class Client {
   //   }
 
   //   public async getDocumentById(
-  //     id: SDKTypes.GetDocumentByIdParams
-  //   ): Promise<SDKTypes.APIResponse<SDKTypes.GetDocumentByIdResponse>> {
+  //     id: SDK.GetDocumentByIdParams
+  //   ): Promise<SDK.APIResponse<SDK.GetDocumentByIdResponse>> {
   //     try {
   //       const response = await fetch(`${this.baseURL}/document/${id}`, {
   //         method: "GET",
@@ -184,7 +188,7 @@ export class Client {
 
   // public async deleteDocumentById(
   //   id: string | number
-  // ): Promise<SDKTypes.APIResponse> {
+  // ): Promise<SDK.APIResponse> {
   //   try {
   //     const response = await fetch(`${this.baseURL}/document/${id}`, {
   //       method: "DELETE",
