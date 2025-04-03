@@ -384,71 +384,93 @@ describe("createDocuments", () => {
 
 describe("searchDocuments", () => {
   /* successful */
-  test("Make a search with url, description, threshold and topK arguments passed", async () => {
-
-    const response = await client.searchDocuments({
+  test("Searches with all arguments (url, description, threshold and topK)", async () => {
+    const documents = {
       "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
       "description": "An image of a monkey taking a selfie.",
       "threshold": 0.75,
       "topK": 12
-    });
+    };
+
+    const response = await client.searchDocuments(documents);
   });
 
   /* successful */
-  test("Make a search with all parameters BUT url", async () => {
-
-    const response = await client.searchDocuments({
+  test("Searches with all parameters BUT url", async () => {
+    const documents = {
       "description": "An image of a monkey taking a selfie.",
       "threshold": 0.75,
       "topK": 12
-    });
+    };
+
+    const response = await client.searchDocuments(documents);
   });
 
   /* successful */
-  test("Make a search with all parameters BUT description", async () => {
-
-    const response = await client.searchDocuments({
+  test("Searches with all parameters BUT description", async () => {
+    const documents = {
       "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
       "threshold": 0.75,
       "topK": 12
-    });
+    };
+
+    const response = await client.searchDocuments(documents);
   });
 
   /* successful */
-  test("Make a search with all parameters BUT threshold", async () => {
-
-    const response = await client.searchDocuments({
+  test("Searches with all parameters BUT threshold", async () => {
+    const documents = {
       "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
       "description": "An image of a monkey taking a selfie.",
       "topK": 12
-    });
+    };
+
+    const response = await client.searchDocuments(documents);
   });
 
   /* successful */
-  test("Make a search with all parameters BUT topK", async () => {
-
-    const response = await client.searchDocuments({
+  test("Searches with all parameters BUT topK", async () => {
+    const documents = {
       "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
       "description": "An image of a monkey taking a selfie.",
       "threshold": 0.75,
-    });
+    };
+
+    const response = await client.searchDocuments(documents);
   });
 
     /* successful */
-    test("Make a search with JUST URL", async () => {
-
-      const response = await client.searchDocuments({
+    test("Searches with JUST URL", async () => {
+      const documents = {
         "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie."
-      });
+      };
+
+      const response = await client.searchDocuments(documents);
     });
 
      /* successful */
-     test("Make a search with JUST DESCRIPTION", async () => {
-
-      const response = await client.searchDocuments({
+     test("Searches with JUST DESCRIPTION", async () => {
+      const documents = {
         "description": "An image of a monkey taking a selfie.",
-      });
+      };
+
+      const response = await client.searchDocuments(documents);
     });
+
+
+    /* successful */
+    test("Searches with a NEGATIVE number for threshold", async () => {
+      const documents = {
+        "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        "description": "An image of a monkey taking a selfie.",
+        "threshold": -0.75,
+        "topK": 12
+      };
+
+      const response = await client.searchDocuments(documents);
+    });
+
+    /* sure combos of URL & other optionals OR description and other optionals isn't required here... */
 
 });
 
