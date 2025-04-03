@@ -31,14 +31,8 @@ describe("SDK Client initialization", () => {
     expect(response).toMatchObject({
       status: 403,
       ok: false,
-      error: expect.any(String),
+      error: "Forbidden",
     });
-
-    if (!response.ok) {
-      expect(response.error).toBe("Forbidden");
-    } else {
-      throw new Error(`Expected a 403 response but got ${response.status}`);
-    }
   });
 
   test("should return an error for wrong endpoint", async () => {
@@ -113,7 +107,24 @@ describe("getDocuments", () => {
       expect(response.data.limit).toBe(1);
       expect(response.data.offset).toBe(1);
     } else {
-      throw new Error(`Expected a 400 response but got ${response.status}`);
+      throw new Error(`Expected a 200 response but got ${response.status}`);
+    }
+  });
+
+  test("should fetch documents even when extra query params are used", async () => {
+    const response = await client.getDocuments({
+      limit: "1",
+      offset: "1",
+      xyz: "something",
+    });
+
+    if (response.ok) {
+      expect(response.status).toBe(200);
+      expect(response.data).toHaveProperty("documents");
+      expect(response.data.limit).toBe(1);
+      expect(response.data.offset).toBe(1);
+    } else {
+      throw new Error(`Expected a 200 response but got ${response.status}`);
     }
   });
 

@@ -9,9 +9,13 @@ export interface ClientConfig {
 //   documents: Document[];
 // }
 
-export interface GetDocumentsParams {
+export interface GetDocumentsParams extends Record<string, unknown> {
   limit?: string | number;
   offset?: string | number;
+}
+
+export interface GetDocumentByIdParams {
+  id: string | number;
 }
 
 // export interface GetDocsReturn {
@@ -108,6 +112,10 @@ export interface GetDocumentsResponse {
   limit: number;
   offset: number;
   count: number;
+}
+
+export interface GetDocumentByIdResponse {
+  document: Document;
 }
 
 interface Document {
