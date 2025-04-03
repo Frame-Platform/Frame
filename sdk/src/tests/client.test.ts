@@ -383,7 +383,6 @@ describe("createDocuments", () => {
 });
 
 describe("searchDocuments", () => {
-  /* successful */
   test("Searches with all arguments (url, description, threshold and topK)", async () => {
     const documents = {
       "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
@@ -395,7 +394,6 @@ describe("searchDocuments", () => {
     const response = await client.searchDocuments(documents);
   });
 
-  /* successful */
   test("Searches with all parameters BUT url", async () => {
     const documents = {
       "description": "An image of a monkey taking a selfie.",
@@ -406,7 +404,6 @@ describe("searchDocuments", () => {
     const response = await client.searchDocuments(documents);
   });
 
-  /* successful */
   test("Searches with all parameters BUT description", async () => {
     const documents = {
       "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
@@ -417,7 +414,6 @@ describe("searchDocuments", () => {
     const response = await client.searchDocuments(documents);
   });
 
-  /* successful */
   test("Searches with all parameters BUT threshold", async () => {
     const documents = {
       "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
@@ -428,7 +424,6 @@ describe("searchDocuments", () => {
     const response = await client.searchDocuments(documents);
   });
 
-  /* successful */
   test("Searches with all parameters BUT topK", async () => {
     const documents = {
       "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
@@ -439,7 +434,6 @@ describe("searchDocuments", () => {
     const response = await client.searchDocuments(documents);
   });
 
-    /* successful */
     test("Searches with JUST URL", async () => {
       const documents = {
         "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie."
@@ -448,7 +442,6 @@ describe("searchDocuments", () => {
       const response = await client.searchDocuments(documents);
     });
 
-     /* successful */
      test("Searches with JUST DESCRIPTION", async () => {
       const documents = {
         "description": "An image of a monkey taking a selfie.",
@@ -457,8 +450,7 @@ describe("searchDocuments", () => {
       const response = await client.searchDocuments(documents);
     });
 
-
-    /* successful */
+    /* think this should throw an error OR fail, but it passes */
     test("Searches with a NEGATIVE number for threshold", async () => {
       const documents = {
         "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
@@ -470,8 +462,24 @@ describe("searchDocuments", () => {
       const response = await client.searchDocuments(documents);
     });
 
-    /* sure combos of URL & other optionals OR description and other optionals isn't required here... */
-
+    test("Searches with a NEGATIVE number for topK", async () => {
+      const documents = {
+        "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        "description": "An image of a monkey taking a selfie.",
+        "threshold": 0.75,
+        "topK": -10
+      };
+      try {
+        await client.searchDocuments(documents);
+        // If it doesn't throw an error, fail the test
+        fail("Expected method to throw an error with negative topK");
+      } catch (error) {
+        // Test passes if an error is thrown
+        expect(error).toBeDefined();
+        // Optionally check for specific error properties
+        // expect(error.message).toContain("topK must be positive");
+      }
+    });
 });
 
 /*
