@@ -3,12 +3,6 @@ export interface ClientConfig {
   baseURL: string;
 }
 
-/*     GET /document     */
-
-// export interface Documents {
-//   documents: Document[];
-// }
-
 export interface GetDocumentsParams extends Record<string, unknown> {
   limit?: string | number;
   offset?: string | number;
@@ -18,65 +12,17 @@ export interface GetDocumentByIdParams {
   id: string | number;
 }
 
-// export interface GetDocsReturn {
-//   documents: Documents;
-//   limit: number;
-//   offset: number;
-//   total: number;
-// }
-
-// /*     POST /document     */
-// export interface PostImageSuccess {
-//   url?: string;
-//   desc?: string;
-//   success: boolean;
-//   errors: string;
-// }
-// export interface PostImagesSuccess {
-//   documents: PostImageSuccess[];
-// }
-
-// /*     GET /document/${id}     */
-// export interface DocumentResponse {
-//   document: {
-//     id: string;
-//     url?: string;
-//     desc?: string;
-//   };
-//   success: boolean;
-//   message?: string;
-// }
-
-// export interface DocumentsResponse {
-//   documents: Document[];
-//   limit: string;
-//   offset: string;
-//   total: number;
-// }
-
-// /*     GET /delete/${id}    current ?           */
-// /*     GET /document/${id}   <<<<  outdated ?   */
-// export interface DeleteDocumentResponse {
-//   document: {
-//     url: string;
-//     desc: string;
-//     id: number | string;
-//   };
-//   success: boolean;
-//   message: string;
-// }
-
-// /*     POST /search     */
-// export interface SearchReturn {
-//   hits: {
-//     url: string;
-//     desc: string;
-//     id: number;
-//     timestamp: string;
-//     score: number;
-//   }[];
-//   count: number;
-// }
+export type CreateDocumentsParams =
+  | {
+      url: string;
+      description?: string | null;
+      metadata?: Record<string, any> | null;
+    }
+  | {
+      url?: string | null;
+      description: string;
+      metadata?: Record<string, any> | null;
+    };
 
 interface ServerSuccess<T> {
   ok: true;
@@ -119,12 +65,19 @@ export interface GetDocumentByIdResponse {
 }
 
 export interface DeleteDocumentByIdResponse {
-  document: Omit<Document, "metadata">;
+  document: Document;
 }
 
-interface Document {
+export interface CreateDocumentsResponse {
+  success: boolean;
+  url?: string | null;
+  description?: string | null;
+  metadata?: Record<string, any> | null;
+}
+
+export interface Document {
   id: number;
   url?: string | null;
-  desc?: string | null;
+  description?: string | null;
   metadata?: Record<string, any> | null;
 }

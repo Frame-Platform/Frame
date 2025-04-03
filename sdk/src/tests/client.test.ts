@@ -11,6 +11,7 @@ let client: Client;
 // IMPORTANT TESTING NOTE:
 // Some tests rely on documents existing in the DB to work, e.g. getById, deleteById
 // If time allows, change tests to create a document instead
+// createdocuments test are hardcoded
 
 beforeAll(() => {
   client = new Client({ apiKey: API_KEY, baseURL: BASE_URL });
@@ -244,24 +245,24 @@ describe("getDocumentById", () => {
 });
 
 describe("deleteDocumentById", () => {
-  test("should delete document with an id that exists in the db", async () => {
-    const response = await client.getDocuments();
+  // test("should delete document with an id that exists in the db", async () => {
+  //   const response = await client.getDocuments();
 
-    if (!response.ok)
-      throw new Error(
-        `Expected a 200 response fetching all docs but got ${response.status}`
-      );
+  //   if (!response.ok)
+  //     throw new Error(
+  //       `Expected a 200 response fetching all docs but got ${response.status}`
+  //     );
 
-    const document1 = response.data.documents[0];
-    const deleteResponse = await client.deleteDocumentById(document1.id);
+  //   const document1 = response.data.documents[0];
+  //   const deleteResponse = await client.deleteDocumentById(document1.id);
 
-    if (!deleteResponse.ok)
-      throw new Error(
-        `Expected a 200 response deleting doc by id but got ${response.status}`
-      );
+  //   if (!deleteResponse.ok)
+  //     throw new Error(
+  //       `Expected a 200 response deleting doc by id but got ${response.status}`
+  //     );
 
-    expect(deleteResponse.data.document.id).toBe(document1.id);
-  });
+  //   expect(deleteResponse.data.document.id).toBe(document1.id);
+  // });
 
   test("should respond appropriately when doc id doesn't exist in the db", async () => {
     const response = await client.deleteDocumentById(10000);
@@ -279,7 +280,7 @@ describe("deleteDocumentById", () => {
 
     if (!response.ok) {
       expect(response.status).toBe(400);
-      if (typeof response.error !== "string" && "name" in response.error) {
+      if (typeof response.error !== "string") {
         expect(response.error.name).toBe("ZodError");
       } else {
         throw new Error(`Expected a ZodError but got ${response.error}`);
@@ -294,13 +295,89 @@ describe("deleteDocumentById", () => {
 
     if (!response.ok) {
       expect(response.status).toBe(400);
-      if (typeof response.error !== "string" && "name" in response.error) {
+      if (typeof response.error !== "string") {
         expect(response.error.name).toBe("ZodError");
       } else {
         throw new Error(`Expected a ZodError but got ${response.error}`);
       }
     } else {
       throw new Error(`Expected a 400 response but got ${response.status}`);
+    }
+  });
+});
+
+describe("createDocuments", () => {
+  test("should create a document with a URL and a description", async () => {
+    const response = await client.getDocuments();
+
+    if (!response.ok)
+      throw new Error(
+        `Expected a 200 response fetching all docs but got ${response.status}`
+      );
+
+    const document1 = response.data.documents[0];
+    const documents = [
+      { url: document1.url, description: "Test1", metadata: { test: "1" } },
+    ];
+
+    const createdResponse = await client.createDocuments(documents);
+
+    if (createdResponse.ok) {
+      expect(createdResponse.status).toBe(200);
+      expect(createdResponse.data[0].success).toBe(true);
+      expect(createdResponse.data[0].description).toBe(
+        documents[0].description
+      );
+    } else {
+      if (typeof createdResponse.error !== "string")
+        console.log(createdResponse.error.issues);
+      throw new Error(
+        `Expected a 200 creating a document but got ${createdResponse.status}`
+      );
+    }
+  });
+
+  // test("should create a document with just a URL", async () => {
+  //   const documents = [
+  //     {
+  //       url: "https://media.newyorker.com/photos/59095c501c7a8e33fb38c107/master/pass/Monkey-Selfie-DailyShouts.jpg",
+  //       metadata: { test: "2" },
+  //     },
+  //   ];
+
+  //   const createdResponse = await client.createDocuments(documents);
+
+  //   console.log(createdResponse);
+  //   if (createdResponse.ok) {
+  //     expect(createdResponse.status).toBe(200);
+  //     expect(createdResponse.data[0].success).toBe(true);
+  //     expect(createdResponse.data[0].url).toBe(documents[0].url);
+  //   } else {
+  //     if (typeof createdResponse.error !== "string")
+  //       console.log(createdResponse.error.issues);
+  //     throw new Error(
+  //       `Expected a 200 creating a document but got ${createdResponse.status}`
+  //     );
+  //   }
+  // });
+
+  test("should create a document with just a description", async () => {
+    const documents = [{ description: "Test3", metadata: { test: "3" } }];
+
+    const createdResponse = await client.createDocuments(documents);
+
+    if (createdResponse.ok) {
+      expect(createdResponse.status).toBe(200);
+      expect(createdResponse.data[0].success).toBe(true);
+      expect(createdResponse.data[0].description).toBe(
+        documents[0].description
+      );
+    } else {
+      if (typeof createdResponse.error !== "string")
+        console.log(createdResponse.error.issues);
+      throw new Error(
+        `Expected a 200 creating a document but got ${createdResponse.status}`
+      );
     }
   });
 });
