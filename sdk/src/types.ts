@@ -118,6 +118,10 @@ export interface GetDocumentByIdResponse {
   document: Document;
 }
 
+export interface DeleteDocumentByIdResponse {
+  document: Omit<Document, "metadata">;
+}
+
 interface Document {
   id: number;
   url?: string | null;

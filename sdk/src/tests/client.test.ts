@@ -245,30 +245,66 @@ describe("getDocumentById", () => {
   });
 });
 
-// describe("deleteDocumentById", () => {
-//   test("should delete document with an id that exists in the db", async () => {
-//     let response = await client.getDocuments();
-//     expect(response).toHaveProperty("status");
-//     expect(response).toHaveProperty("ok");
-//     expect(response).toHaveProperty("data");
+describe("deleteDocumentById", () => {
+  test("should delete document with an id that exists in the db", async () => {
+    const response = await client.getDocuments();
 
-//     const document = response.data.documents[0];
-//     await client.deleteDocumentById(document.id);
+    if (!response.ok)
+      throw new Error(
+        `Expected a 200 response fetching all docs but got ${response.status}`
+      );
 
-//     console.log(document, document.id);
-//     response = await client.getDocumentById(document.id);
-//     console.log(response);
-//     expect(response).toHaveProperty("status");
-//     expect(response).toHaveProperty("ok");
-//     expect(response).toHaveProperty("data");
-//     expect(response.status).toBe(200);
-//     console.log(response);
-//   });
-// });
+    const document1 = response.data.documents[0];
+    const deleteResponse = await client.deleteDocumentById(document1.id);
 
-//valid
-// Request with valid path ID (non-negative number) for a document that exists
-// Request with valid path ID (non-negative number) for a document that does not exist
+    if (!deleteResponse.ok)
+      throw new Error(
+        `Expected a 200 response deleting doc by id but got ${response.status}`
+      );
 
-//invalid
-// Request with an invalid path ID (negative or non-number data type) for a document
+    expect(deleteResponse.data.document.id).toBe(document1.id);
+  });
+
+  test("should respond appropriately when doc id doesn't exist in the db", async () => {
+    const response = await client.deleteDocumentById(10000);
+
+    if (!response.ok) {
+      expect(response.status).toBe(404);
+      expect(response.error).toBe("Document Not Found");
+    } else {
+      throw new Error(`Expected a 404 response but got ${response.status}`);
+    }
+  });
+
+  test("negative id inputs are considered invalid", async () => {
+    const response = await client.deleteDocumentById(-1);
+
+    if (!response.ok) {
+      expect(response.status).toBe(400);
+      if (typeof response.error !== "string" && "name" in response.error) {
+        expect(response.error.name).toBe("ZodError");
+      } else {
+        throw new Error(`Expected a ZodError but got ${response.error}`);
+      }
+      console.log(response);
+    } else {
+      throw new Error(`Expected a 400 response but got ${response.status}`);
+    }
+  });
+
+  test("non-number id inputs are considered invalid", async () => {
+    const response = await client.deleteDocumentById(false as any as number);
+
+    if (!response.ok) {
+      expect(response.status).toBe(400);
+      if (typeof response.error !== "string" && "name" in response.error) {
+        expect(response.error.name).toBe("ZodError");
+      } else {
+        throw new Error(`Expected a ZodError but got ${response.error}`);
+      }
+      console.log(response);
+    } else {
+      throw new Error(`Expected a 400 response but got ${response.status}`);
+    }
+  });
+});

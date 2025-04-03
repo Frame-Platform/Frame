@@ -87,11 +87,14 @@ export class Client {
     );
   }
 
-  // public async deleteDocumentById(
-  //   id: string | number
-  // ): Promise<SDKTypes.APIResponse> {
-  //   return this.request<SDKTypes.APIResponse>(`/document/${id}`, "DELETE");
-  // }
+  public deleteDocumentById(
+    id: string | number
+  ): Promise<SDKTypes.APIResponse<SDKTypes.DeleteDocumentByIdResponse>> {
+    return this.request<SDKTypes.DeleteDocumentByIdResponse>(
+      `/document/${id}`,
+      "DELETE"
+    );
+  }
 
   //   public async getDocuments(
   //     params: SDKTypes.GetDocumentsParams = {}
