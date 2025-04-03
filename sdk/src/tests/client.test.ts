@@ -337,29 +337,28 @@ describe("createDocuments", () => {
     }
   });
 
-  // test("should create a document with just a URL", async () => {
-  //   const documents = [
-  //     {
-  //       url: "https://media.newyorker.com/photos/59095c501c7a8e33fb38c107/master/pass/Monkey-Selfie-DailyShouts.jpg",
-  //       metadata: { test: "2" },
-  //     },
-  //   ];
+  test("should create a document with just a URL", async () => {
+    const documents = [
+      {
+        url: "https://media.newyorker.com/photos/59095c501c7a8e33fb38c107/master/pass/Monkey-Selfie-DailyShouts.jpg",
+        metadata: { test: "2" },
+      },
+    ];
 
-  //   const createdResponse = await client.createDocuments(documents);
+    const createdResponse = await client.createDocuments(documents);
 
-  //   console.log(createdResponse);
-  //   if (createdResponse.ok) {
-  //     expect(createdResponse.status).toBe(200);
-  //     expect(createdResponse.data[0].success).toBe(true);
-  //     expect(createdResponse.data[0].url).toBe(documents[0].url);
-  //   } else {
-  //     if (typeof createdResponse.error !== "string")
-  //       console.log(createdResponse.error.issues);
-  //     throw new Error(
-  //       `Expected a 200 creating a document but got ${createdResponse.status}`
-  //     );
-  //   }
-  // });
+    if (createdResponse.ok) {
+      expect(createdResponse.status).toBe(200);
+      expect(createdResponse.data[0].success).toBe(true);
+      expect(createdResponse.data[0].url).toBe(documents[0].url);
+    } else {
+      if (typeof createdResponse.error !== "string")
+        console.log(createdResponse.error.issues);
+      throw new Error(
+        `Expected a 200 creating a document but got ${createdResponse.status}`
+      );
+    }
+  });
 
   test("should create a document with just a description", async () => {
     const documents = [{ description: "Test3", metadata: { test: "3" } }];
@@ -377,6 +376,92 @@ describe("createDocuments", () => {
         console.log(createdResponse.error.issues);
       throw new Error(
         `Expected a 200 creating a document but got ${createdResponse.status}`
+      );
+    }
+  });
+
+  test("should be able to upload 11+ documents", async () => {
+    const documents = [
+      {
+        url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        description: "naruto1",
+      },
+      {
+        url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        description: "naruto2",
+      },
+      {
+        url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        description: "naruto3",
+      },
+      {
+        url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        description: "naruto4",
+      },
+      {
+        url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        description: "naruto5",
+      },
+      {
+        url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        description: "naruto6",
+      },
+      {
+        url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        description: "naruto7",
+      },
+      {
+        url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        description: "naruto8",
+      },
+      {
+        url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        description: "naruto9",
+      },
+      {
+        url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        description: "naruto10",
+      },
+      {
+        url: "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+        description: "naruto11",
+      },
+    ];
+
+    const response = await client.createDocuments(documents);
+
+    if (response.ok) {
+      expect(response.status).toBe(200);
+      expect(response.data[0].success).toBe(true);
+      for (let i = 0; i < documents.length; i++) {
+        expect(response.data[i].url).toBe(documents[i].url);
+        expect(response.data[i].description).toBe(documents[i].description);
+      }
+    } else {
+      throw new Error(
+        `Expected a 200 creating a document but got ${response.status}`
+      );
+    }
+  });
+
+  test("invalid image urls/images that fail to fetch will not work", async () => {
+    const documents = [
+      {
+        url: "www.fakeurl.com",
+        metadata: { test: "4" },
+      },
+    ];
+
+    const response = await client.createDocuments(documents);
+
+    if (!response.ok) {
+      expect(response.status).toBe(400);
+      if (typeof response.error !== "string") {
+        expect(response.error.name).toBe("ZodError");
+      }
+    } else {
+      throw new Error(
+        `Expected a 400 creating a document but got ${response.status}`
       );
     }
   });
