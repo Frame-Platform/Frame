@@ -222,7 +222,6 @@ describe("getDocumentById", () => {
       } else {
         throw new Error(`Expected a ZodError but got ${response.error}`);
       }
-      console.log(response);
     } else {
       throw new Error(`Expected a 400 response but got ${response.status}`);
     }
@@ -238,7 +237,6 @@ describe("getDocumentById", () => {
       } else {
         throw new Error(`Expected a ZodError but got ${response.error}`);
       }
-      console.log(response);
     } else {
       throw new Error(`Expected a 400 response but got ${response.status}`);
     }
@@ -286,7 +284,6 @@ describe("deleteDocumentById", () => {
       } else {
         throw new Error(`Expected a ZodError but got ${response.error}`);
       }
-      console.log(response);
     } else {
       throw new Error(`Expected a 400 response but got ${response.status}`);
     }
@@ -302,7 +299,6 @@ describe("deleteDocumentById", () => {
       } else {
         throw new Error(`Expected a ZodError but got ${response.error}`);
       }
-      console.log(response);
     } else {
       throw new Error(`Expected a 400 response but got ${response.status}`);
     }
