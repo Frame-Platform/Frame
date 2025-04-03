@@ -78,14 +78,14 @@ export class Client {
     );
   }
 
-  // public getDocumentById(
-  //   id: string
-  // ): Promise<SDKTypes.APIResponse<SDKTypes.GetDocumentByIdResponse>> {
-  //   return this.request<SDKTypes.GetDocumentByIdResponse>(
-  //     `/document/${id}`,
-  //     "GET"
-  //   );
-  // }
+  public getDocumentById(
+    id: string | number
+  ): Promise<SDKTypes.APIResponse<SDKTypes.GetDocumentByIdResponse>> {
+    return this.request<SDKTypes.GetDocumentByIdResponse>(
+      `/document/${id}`,
+      "GET"
+    );
+  }
 
   // public async deleteDocumentById(
   //   id: string | number

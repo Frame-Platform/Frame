@@ -162,69 +162,88 @@ describe("getDocuments", () => {
   });
 });
 
-// describe("getDocumentById", () => {
-//   test("should fetch document with an id that exists in the db", async () => {
-//     let response = await client.getDocuments();
+describe("getDocumentById", () => {
+  test("should fetch document with an id that exists in the db", async () => {
+    const response = await client.getDocuments();
 
-//     if (!response.ok) throw new Error(`Expected a 200 response fetching all docs but got ${response.status}`)
+    if (!response.ok)
+      throw new Error(
+        `Expected a 200 response fetching all docs but got ${response.status}`
+      );
 
-//     const document1 = response.data.documents[0];
-//     response = await client.getDocumentById(document1.id);
+    const document1 = response.data.documents[0];
+    const documentResponse = await client.getDocumentById(document1.id);
 
-//     expect(response).toHaveProperty("status");
-//     expect(response).toHaveProperty("ok");
-//     expect(response).toHaveProperty("data");
-//     expect(response.data).toHaveProperty("document");
-//   });
+    if (!documentResponse.ok)
+      throw new Error(
+        `Expected a 200 response fetching doc by id but got ${response.status}`
+      );
 
-//   // test("should fetch document when a string version of number is used", async () => {
-//   //   let response = await client.getDocuments();
-//   //   expect(response).toHaveProperty("status");
-//   //   expect(response).toHaveProperty("ok");
-//   //   expect(response).toHaveProperty("data");
+    expect(documentResponse.data.document.id).toBe(document1.id);
+  });
 
-//   //   const document1 = response.data.documents[0];
-//   //   response = await client.getDocumentById(String(document1.id));
+  test("should fetch document when a string version of number is used", async () => {
+    const response = await client.getDocuments();
 
-//   //   expect(response).toHaveProperty("status");
-//   //   expect(response).toHaveProperty("ok");
-//   //   expect(response).toHaveProperty("data");
-//   //   expect(response.data).toHaveProperty("document");
-//   // });
+    if (!response.ok)
+      throw new Error(
+        `Expected a 200 response fetching all docs but got ${response.status}`
+      );
 
-//   // test("should respond appropriately when doc id doesn't exist in the db", async () => {
-//   //   const response = await client.getDocumentById(10000);
-//   //   expect(response).toHaveProperty("status");
-//   //   expect(response).toHaveProperty("ok");
-//   //   expect(response).toHaveProperty("data");
+    const document1 = response.data.documents[0];
+    const documentResponse = await client.getDocumentById(String(document1.id));
 
-//   //   expect(response.status).toBe(404);
-//   //   expect(response.data).toHaveProperty("error");
-//   //   expect(response.data.error).toBe("Document Not Found");
-//   // });
+    if (!documentResponse.ok)
+      throw new Error(
+        `Expected a 200 response fetching doc by id but got ${response.status}`
+      );
 
-//   // test("negative id inputs are considered invalid", async () => {
-//   //   const response = await client.getDocumentById(-1);
-//   //   expect(response).toHaveProperty("status");
-//   //   expect(response).toHaveProperty("ok");
-//   //   expect(response).toHaveProperty("data");
+    expect(documentResponse.data.document.id).toBe(document1.id);
+  });
 
-//   //   expect(response.status).toBe(400);
-//   //   expect(response.data).toHaveProperty("error");
-//   //   expect(response.data.error.name).toBe("ZodError");
-//   // });
+  test("should respond appropriately when doc id doesn't exist in the db", async () => {
+    const response = await client.getDocumentById(10000);
 
-//   // test("non-number id inputs are considered invalid", async () => {
-//   //   const response = await client.getDocumentById(false as any as number);
-//   //   expect(response).toHaveProperty("status");
-//   //   expect(response).toHaveProperty("ok");
-//   //   expect(response).toHaveProperty("data");
+    if (!response.ok) {
+      expect(response.status).toBe(404);
+      expect(response.error).toBe("Document Not Found");
+    } else {
+      throw new Error(`Expected a 404 response but got ${response.status}`);
+    }
+  });
 
-//   //   expect(response.status).toBe(400);
-//   //   expect(response.data).toHaveProperty("error");
-//   //   expect(response.data.error.name).toBe("ZodError");
-//   // });
-// });
+  test("negative id inputs are considered invalid", async () => {
+    const response = await client.getDocumentById(-1);
+
+    if (!response.ok) {
+      expect(response.status).toBe(400);
+      if (typeof response.error !== "string" && "name" in response.error) {
+        expect(response.error.name).toBe("ZodError");
+      } else {
+        throw new Error(`Expected a ZodError but got ${response.error}`);
+      }
+      console.log(response);
+    } else {
+      throw new Error(`Expected a 400 response but got ${response.status}`);
+    }
+  });
+
+  test("non-number id inputs are considered invalid", async () => {
+    const response = await client.getDocumentById(false as any as number);
+
+    if (!response.ok) {
+      expect(response.status).toBe(400);
+      if (typeof response.error !== "string" && "name" in response.error) {
+        expect(response.error.name).toBe("ZodError");
+      } else {
+        throw new Error(`Expected a ZodError but got ${response.error}`);
+      }
+      console.log(response);
+    } else {
+      throw new Error(`Expected a 400 response but got ${response.status}`);
+    }
+  });
+});
 
 // describe("deleteDocumentById", () => {
 //   test("should delete document with an id that exists in the db", async () => {
