@@ -381,3 +381,23 @@ describe("createDocuments", () => {
     }
   });
 });
+
+describe("searchDocuments", () => {
+  /* successful */
+  test("Make a search with url, description, threshold and topK arguments passed", async () => {
+
+    const response = await client.searchDocuments({
+      "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+      "description": "An image of a monkey taking a selfie.",
+      "threshold": 0.75,
+      "topK": 12
+    });
+  });
+});
+
+/*
+Notes:
+- neg
+- extra
+- optional missing
+*/
