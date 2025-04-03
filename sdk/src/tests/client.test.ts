@@ -393,6 +393,63 @@ describe("searchDocuments", () => {
       "topK": 12
     });
   });
+
+  /* successful */
+  test("Make a search with all parameters BUT url", async () => {
+
+    const response = await client.searchDocuments({
+      "description": "An image of a monkey taking a selfie.",
+      "threshold": 0.75,
+      "topK": 12
+    });
+  });
+
+  /* successful */
+  test("Make a search with all parameters BUT description", async () => {
+
+    const response = await client.searchDocuments({
+      "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+      "threshold": 0.75,
+      "topK": 12
+    });
+  });
+
+  /* successful */
+  test("Make a search with all parameters BUT threshold", async () => {
+
+    const response = await client.searchDocuments({
+      "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+      "description": "An image of a monkey taking a selfie.",
+      "topK": 12
+    });
+  });
+
+  /* successful */
+  test("Make a search with all parameters BUT topK", async () => {
+
+    const response = await client.searchDocuments({
+      "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie.jpg",
+      "description": "An image of a monkey taking a selfie.",
+      "threshold": 0.75,
+    });
+  });
+
+    /* successful */
+    test("Make a search with JUST URL", async () => {
+
+      const response = await client.searchDocuments({
+        "url": "https://media.newyorker.com/photos/59095bb86552fa0be682d9d0/master/pass/Monkey-Selfie."
+      });
+    });
+
+     /* successful */
+     test("Make a search with JUST DESCRIPTION", async () => {
+
+      const response = await client.searchDocuments({
+        "description": "An image of a monkey taking a selfie.",
+      });
+    });
+
 });
 
 /*
