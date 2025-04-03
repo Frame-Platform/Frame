@@ -81,3 +81,31 @@ export interface Document {
   description?: string | null;
   metadata?: Record<string, any> | null;
 }
+
+export type SearchRequest =
+| {
+  url: string;
+  description?: string | null;
+  threshold?: number;
+  topK?: number;
+}
+| {
+  url?: string | null;
+  description: string;
+  threshold?: number;
+  topK?: number;
+};
+
+export interface SearchHit {
+  id: number;
+  url: string;
+  description: string;
+  metadata?: Record<string, any> | null;
+  timestamp: string;
+  score: number;
+}
+
+export interface SearchDocumentResponse {
+  hits: SearchHit[];
+  count: number;
+}
