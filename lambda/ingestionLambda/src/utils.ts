@@ -23,7 +23,7 @@ let pgClient: null | Client = null;
 // Function to retrieve and parse database credentials
 const getDatabaseCredentials = async (
   secretName: string,
-  region: string,
+  region: string
 ): Promise<DatabaseCredentials> => {
   const client = new SecretsManagerClient({
     region: region,
@@ -34,7 +34,7 @@ const getDatabaseCredentials = async (
       new GetSecretValueCommand({
         SecretId: secretName,
         VersionStage: "AWSCURRENT",
-      }),
+      })
     );
 
     if (!response.SecretString) {
@@ -52,7 +52,7 @@ const getDatabaseCredentials = async (
       console.error(`Error retrieving database credentials: ${error.message}`);
     } else {
       console.error(
-        "Unknown error occurred while retrieving database credentials",
+        "Unknown error occurred while retrieving database credentials"
       );
     }
     throw error;
@@ -93,7 +93,7 @@ export const pgConnect = async () => {
 
 export const pgInsert = async (
   embedding: number[],
-  document: DocPayloadType,
+  document: DocPayloadType
 ): Promise<void> => {
   try {
     let { url, description, metadata } = document;
@@ -128,10 +128,6 @@ export const pgInsert = async (
       description,
       metadata,
     ]);
-    // await pgClient.query(
-    //   `SELECT setval('documents_id_seq', (SELECT MAX(id) FROM documents3));`,
-    // );
-
   } catch (e) {
     throw new Error(`Error inserting document into database: ${e}`);
   }
