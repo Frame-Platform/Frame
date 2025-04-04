@@ -10,11 +10,9 @@ import {
 } from "../utils/extractAPIDetails.js";
 import { addEnvironmentVariables } from "../utils/config-manager.js";
 
-// Load environment variables
 dotenv.config();
 
 export async function deployCommand(options: any) {
-  // Check if initialized
   if (process.env.INITIALIZED !== "true") {
     console.log(chalk.red("Configuration not initialized. Please run:"));
     console.log(chalk.yellow("document-embedding init"));
@@ -23,7 +21,6 @@ export async function deployCommand(options: any) {
 
   console.log(chalk.blue.bold("\n Document Embedding Pipeline - Deployment\n"));
 
-  // Confirm deployment
   const { confirmDeploy } = await inquirer.prompt([
     {
       type: "confirm",
@@ -38,9 +35,7 @@ export async function deployCommand(options: any) {
     return;
   }
 
-  // Deployment steps
   try {
-    // 1. Check CDK is installed
     const cdkCheckSpinner = ora("Checking CDK installation...").start();
     try {
       await execCommand("cdk --version", true);
@@ -52,7 +47,6 @@ export async function deployCommand(options: any) {
       process.exit(1);
     }
 
-    // 2. Bootstrap CDK (if needed)
     console.log(chalk.yellow("\nBootstrapping CDK (if needed)..."));
     const bootstrapSpinner = ora("Running CDK bootstrap...").start();
     try {
@@ -64,12 +58,10 @@ export async function deployCommand(options: any) {
       process.exit(1);
     }
 
-    // 3. Deploy the stacks
     console.log(chalk.yellow("\nDeploying infrastructure stacks"));
     let stdout = "";
     let stderr = "";
     try {
-      // Set the proper environment variables for the CDK process
       const output = await execCommand(
         "cdk deploy --all --require-approval never",
         true
@@ -107,25 +99,6 @@ export async function deployCommand(options: any) {
         "See SDK Documentation for Additional Information and Guidance"
       )
     );
-
-    /*
-    // Generate SDK configuration (optional)
-    console.log(
-      chalk.white(
-        "\n[NOTE: SDK YET TO BE DEVELOPED - THIS IS PLACEHOLDER] - To use the document embedding pipeline in your applications, configure the SDK:"
-      )
-    );
-    console.log(
-      chalk.yellow(`
-import { DocumentEmbeddingClient } from 'document-embedding-sdk';
-
-const client = new DocumentEmbeddingClient({
-  endpoint: '${apiEndpoint || "YOUR_API_ENDPOINT"}',
-  apiKey: '${apiKeyId || "YOUR_API_KEY"}'
-});
-      `)
-    );
-    */
   } catch (error) {
     console.error(chalk.red("\nDeployment failed:"));
     console.error(

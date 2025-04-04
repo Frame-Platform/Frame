@@ -8,7 +8,7 @@ import {
 import { imageResponseSchema, ValidDocResult } from "./schema";
 import { BaseDocumentType } from "../sharedSchemas";
 
-const SQS_BATCH_SIZE = 10; //AWS Max = 10
+const SQS_BATCH_SIZE = 10;
 
 export const pgGetDocuments = async (limit: number, offset: number) => {
   try {

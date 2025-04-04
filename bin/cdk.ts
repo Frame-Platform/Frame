@@ -7,7 +7,6 @@ import { ApiStack } from "../lib/api-stack";
 
 const app = new cdk.App();
 
-// Create the messaging stack
 const messagingStack = new MessagingStack(app, "MessagingStack", {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
@@ -15,7 +14,6 @@ const messagingStack = new MessagingStack(app, "MessagingStack", {
   },
 });
 
-// Create the storage stack
 const storageStack = new StorageStack(app, "StorageStack", {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
@@ -23,7 +21,6 @@ const storageStack = new StorageStack(app, "StorageStack", {
   },
 });
 
-// Create the compute stack
 const computeStack = new ComputeStack(app, "ComputeStack", {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
@@ -36,7 +33,6 @@ const computeStack = new ComputeStack(app, "ComputeStack", {
   imageBucket: storageStack.imageBucket,
 });
 
-// Create the API stack
 const apiStack = new ApiStack(app, "ApiStack", {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
@@ -45,7 +41,6 @@ const apiStack = new ApiStack(app, "ApiStack", {
   apiLambda: computeStack.apiLambda,
 });
 
-// Add dependency to ensure correct deployment order
 computeStack.addDependency(messagingStack);
 computeStack.addDependency(storageStack);
 apiStack.addDependency(computeStack);
