@@ -11,12 +11,10 @@ let template: Template;
 beforeEach(() => {
   app = new cdk.App();
 
-  // Create mock resources needed for testing
   const mockStack = new cdk.Stack(app, "MockStack");
   const queue = new sqs.Queue(mockStack, "MockQueue");
   const bucket = new s3.Bucket(mockStack, "MockBucket");
 
-  // Create the compute stack with required props
   stack = new ComputeStack(app, "TestComputeStack", {
     documentQueue: queue,
     databaseSecretArn: "arn:aws:secretsmanager:region:account:secret:name",
@@ -29,10 +27,8 @@ beforeEach(() => {
 });
 
 test("creates all Lambda functions with correct configuration", () => {
-  // Verify three Lambda functions are created
   template.resourceCountIs("AWS::Lambda::Function", 3);
 
-  // Verify API Lambda
   template.hasResourceProperties("AWS::Lambda::Function", {
     Handler: "index.handler",
     Runtime: "nodejs22.x",
@@ -52,7 +48,6 @@ test("creates all Lambda functions with correct configuration", () => {
     },
   });
 
-  // Verify Image Ingestion Lambda
   template.hasResourceProperties("AWS::Lambda::Function", {
     Handler: "index.handler",
     Runtime: "nodejs22.x",
@@ -70,7 +65,6 @@ test("creates all Lambda functions with correct configuration", () => {
     },
   });
 
-  // Verify Search Lambda
   template.hasResourceProperties("AWS::Lambda::Function", {
     Handler: "index.handler",
     Runtime: "nodejs22.x",
@@ -100,11 +94,9 @@ test("creates SQS event source mapping", () => {
 });
 
 test("creates IAM roles with correct permissions", () => {
-  // Check for IAM roles
   const roles = template.findResources("AWS::IAM::Role");
   expect(Object.keys(roles).length).toBeGreaterThan(0);
 
-  // Check for Secrets Manager permissions
   template.hasResourceProperties("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: Match.arrayWith([
@@ -117,7 +109,6 @@ test("creates IAM roles with correct permissions", () => {
     },
   });
 
-  // Grants API Lambda permission to invoke Search Lambda
   template.hasResourceProperties("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: Match.arrayWith([
@@ -130,7 +121,6 @@ test("creates IAM roles with correct permissions", () => {
     },
   });
 
-  // Grants API Lambda permissions for S3 operations
   template.hasResourceProperties("AWS::IAM::Policy", {
     PolicyDocument: {
       Statement: Match.arrayWith([

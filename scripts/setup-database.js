@@ -3,7 +3,6 @@ require("dotenv").config();
 
 async function setupDatabase() {
   try {
-    // Get configuration from environment or .env file
     const dbName = process.env.POSTGRES_DB_NAME || "postgres";
 
     console.log(`Setting up database ${dbName} with table named "documents"`);
