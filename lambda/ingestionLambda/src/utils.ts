@@ -23,7 +23,7 @@ let pgClient: null | Client = null;
 // Function to retrieve and parse database credentials
 const getDatabaseCredentials = async (
   secretName: string,
-  region: string
+  region: string,
 ): Promise<DatabaseCredentials> => {
   const client = new SecretsManagerClient({
     region: region,
@@ -34,7 +34,7 @@ const getDatabaseCredentials = async (
       new GetSecretValueCommand({
         SecretId: secretName,
         VersionStage: "AWSCURRENT",
-      })
+      }),
     );
 
     if (!response.SecretString) {
@@ -52,7 +52,7 @@ const getDatabaseCredentials = async (
       console.error(`Error retrieving database credentials: ${error.message}`);
     } else {
       console.error(
-        "Unknown error occurred while retrieving database credentials"
+        "Unknown error occurred while retrieving database credentials",
       );
     }
     throw error;
@@ -93,7 +93,7 @@ export const pgConnect = async () => {
 
 export const pgInsert = async (
   embedding: number[],
-  document: DocPayloadType
+  document: DocPayloadType,
 ): Promise<void> => {
   try {
     let { url, description, metadata } = document;
@@ -103,7 +103,7 @@ export const pgInsert = async (
 
     await pgClient.query(`
       CREATE EXTENSION IF NOT EXISTS vector;
-      CREATE TABLE IF NOT EXISTS documents4 (
+      CREATE TABLE IF NOT EXISTS documents (
         id SERIAL PRIMARY KEY,
         embedding vector(1024) NOT NULL,
         url TEXT,
@@ -117,7 +117,7 @@ export const pgInsert = async (
     `);
 
     const query = `
-      INSERT INTO documents4 (embedding, url, description, metadata)
+      INSERT INTO documents (embedding, url, description, metadata)
       VALUES ($1, $2, $3, $4)
       ON CONFLICT ON CONSTRAINT unique_url_desc_constraint DO NOTHING;
     `;
@@ -134,7 +134,7 @@ export const pgInsert = async (
 };
 
 export const resizeImageToLimit = async (
-  imageBuffer: Buffer
+  imageBuffer: Buffer,
 ): Promise<Buffer> => {
   const MAX_DIMENSION = 2048;
   try {
@@ -164,7 +164,7 @@ export const callTitan = async (payload: TitanInputType) => {
 
     const responseBedrock = await bedrockClient.send(command);
     const responseBody = JSON.parse(
-      Buffer.from(responseBedrock.body).toString()
+      Buffer.from(responseBedrock.body).toString(),
     );
 
     return responseBody.embedding;
@@ -183,7 +183,7 @@ export const downloadImage = async (url: string) => {
 
   if (!res.ok) {
     throw new Error(
-      `Non 200 response for url ${url}, status:${res.status} ${res.statusText}`
+      `Non 200 response for url ${url}, status:${res.status} ${res.statusText}`,
     );
   }
   const contentType = res.headers.get("content-type");
