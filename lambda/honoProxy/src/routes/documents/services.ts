@@ -16,7 +16,7 @@ export const pgGetDocuments = async (limit: number, offset: number) => {
 
     const query = `
       SELECT id, url, description, metadata
-      FROM documents4
+      FROM documents
       ORDER BY id DESC
       LIMIT $1
       OFFSET $2
@@ -34,7 +34,7 @@ export const pgGetById = async (id: string | number) => {
 
     const query = `
       SELECT id, url, description, metadata
-      FROM documents4
+      FROM documents
       WHERE id = $1;
     `;
 
@@ -50,7 +50,7 @@ export const pgGetEmbedding = async (id: string | number) => {
 
     const query = `
       SELECT embedding
-      FROM documents4
+      FROM documents
       WHERE id = $1;
     `;
 
@@ -64,7 +64,7 @@ export const pgGetRecommendations = async (
   embedding: number[],
   id: number,
   threshold: number,
-  topK: number
+  topK: number,
 ) => {
   try {
     const pgClient = await pgConnect();
@@ -78,7 +78,7 @@ export const pgGetRecommendations = async (
         timestamp,
         1 - (embedding <=> $1::vector) AS score
     FROM
-        documents4
+        documents
     WHERE
         id != $2 AND
         1 - (embedding <=> $1::vector) >= $3
@@ -97,7 +97,7 @@ export const pgDeleteDocument = async (id: number) => {
   try {
     const pgClient = await pgConnect();
     const query = `
-      DELETE FROM documents4
+      DELETE FROM documents
       WHERE id = $1
       RETURNING id, url, description, metadata;
     `;
@@ -111,7 +111,7 @@ export const pgDeleteDocument = async (id: number) => {
 const formatResult = (
   success: boolean,
   errors: string | null | undefined,
-  { url, description, metadata }: BaseDocumentType
+  { url, description, metadata }: BaseDocumentType,
 ) => ({
   success,
   ...(errors && { errors }),
@@ -157,7 +157,7 @@ export async function sendToSQS(documents: BaseDocumentType[]) {
         Failed.forEach((entry) => {
           const doc = documents[Number(entry.Id)];
           docSendResult.push(
-            formatResult(false, entry.Message || "Unknown Error", doc)
+            formatResult(false, entry.Message || "Unknown Error", doc),
           );
         });
       }
