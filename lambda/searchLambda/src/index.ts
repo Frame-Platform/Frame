@@ -44,7 +44,7 @@ export const handler = async (
           timestamp,
           1 - (embedding <=> $1::vector) AS score
       FROM
-          documents4
+          documents
       WHERE
           1 - (embedding <=> $1::vector) >= $2
       ORDER BY
