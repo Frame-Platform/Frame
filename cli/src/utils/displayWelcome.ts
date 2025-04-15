@@ -2,9 +2,7 @@ import chalk from "chalk";
 
 export const displayWelcome = () => {
   console.log(
-    chalk.blue.bold(
-      "\n📋 [INSERT PROJECT NAME] Document Embedding Pipeline - Initialization\n"
-    )
+    chalk.blue.bold("\n📋 Frame Document Embedding Pipeline - Initialization\n")
   );
   console.log(
     chalk.yellow(

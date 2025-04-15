@@ -40,8 +40,8 @@ Before starting, you'll need:
 Clone the repository and move into the top-level directory:
 
 ```console
-git clone https://github.com/UntitledCapstoneProj/new.git
-cd new
+git clone https://github.com/UntitledCapstoneProj/Frame.git
+cd Frame
 ```
 
 ### Step 2: Build the Project Environment

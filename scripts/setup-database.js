@@ -26,14 +26,17 @@ async function setupDatabase() {
     await client.query(`CREATE EXTENSION IF NOT EXISTS vector`);
     await client.query(
       `
-      CREATE TABLE documents (
-        id serial PRIMARY KEY,
+      CREATE TABLE IF NOT EXISTS documents (
+        id SERIAL PRIMARY KEY,
+        embedding vector(1024) NOT NULL,
         url TEXT,
         description TEXT,
-        embedding VECTOR(1024) NOT NULL,
-        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
-        CONSTRAINT unique_url_desc UNIQUE (url, description)
-      )
+        metadata JSON,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        url_for_constraint TEXT GENERATED ALWAYS AS (COALESCE(url, '__null__')) STORED,
+        desc_for_constraint TEXT GENERATED ALWAYS AS (COALESCE(description, '__null__')) STORED,
+        CONSTRAINT unique_url_desc_constraint UNIQUE (url_for_constraint, desc_for_constraint)
+      );
     `
     );
     await client.query(
