@@ -96,10 +96,6 @@ export class StorageStack extends cdk.Stack {
       performanceInsightRetention: rds.PerformanceInsightRetention.DEFAULT,
     });
 
-    const bucketEncryptionKey = new kms.Key(this, "ImageBucketKey", {
-      description: "KMS key for image bucket encryption",
-    });
-
     this.imageBucket = new s3.Bucket(this, "ImageBucket", {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
@@ -109,9 +105,6 @@ export class StorageStack extends cdk.Stack {
         ignorePublicAcls: false,
         restrictPublicBuckets: false,
       }),
-      encryption: s3.BucketEncryption.KMS,
-      encryptionKey: bucketEncryptionKey,
-      bucketKeyEnabled: true,
     });
 
     this.imageBucket.addToResourcePolicy(
