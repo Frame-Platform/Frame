@@ -17,7 +17,7 @@ After deployment, you'll have a complete system that can:
 
 The image-embedding pipeline deploys several key components in your AWS account using AWS CDK (Cloud Development Kit).
 
-[ADD INFRASTRUCTURE DIAGRAM HERE]
+![Architecture Diagram](./arch-diagram.png)
 
 Full details of the infrastructure to be deployed for each individual stack can be found in the `docs` folder of this repository. Please ensure you review these documents before deploying the infrastructure.
 
