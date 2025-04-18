@@ -15,7 +15,7 @@ After deployment, you'll have a complete system that can:
 
 ## Infrastructure Overview
 
-The image-embedding pipeline deploys several key components in your AWS account using AWS CDK (Cloud Development Kit).
+Frame deploys several key components in your AWS account using AWS CDK (Cloud Development Kit).
 
 [ADD INFRASTRUCTURE DIAGRAM HERE]
 
@@ -56,7 +56,7 @@ This will run the `build-all.js` script to:
 
 - Set up the project environment by installing the required dependencies for the CLI and the CDK.
 - Build the CLI by compiling the TypeScript files into JavaScript.
-- Link the CLI globally on your system (so as to enable the use of the `document-embedding` commands referenced below).
+- Link the CLI globally on your system (to enable the use of the `document-embedding` commands referenced below).
 - Build the Lambda functions referenced in the CDK (packaging them up into zip files ready for deployment).
 
 ### Step 3: Configure Your Settings

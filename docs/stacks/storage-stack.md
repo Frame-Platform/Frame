@@ -21,11 +21,11 @@ The Storage Stack sets up all data storage components needed for the Document Em
 
 ## S3 Bucket Configuration
 
-| Setting       | Value                 | Notes                           |
-| :------------ | :-------------------- | :------------------------------ |
-| Public Access | Enabled               | Images can be accessed directly |
-| Versioning    | Disabled              | Only latest version stored      |
-| Encryption    | Server-side (SSE-KMS) | Data encrypted at rest          |
+| Setting       | Value                     | Notes                           |
+| :------------ | :------------------------ | :------------------------------ |
+| Public Access | Enabled                   | Images can be accessed directly |
+| Versioning    | Disabled                  | Only latest version stored      |
+| Encryption    | Server-side (AWS-Managed) | Data encrypted at rest          |
 
 ## S3 Bucket Configuration
 
